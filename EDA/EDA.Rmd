@@ -1,0 +1,230 @@
+---
+title: "ESConv EDA"
+author: ""
+date: '2025-01-26'
+output:
+  bookdown::html_document2:
+    theme: yeti
+    highlight: default
+    toc: true
+    toc_float: true
+---
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+knitr::opts_chunk$set(warning = FALSE)
+knitr::opts_chunk$set(message = FALSE)
+knitr::opts_chunk$set(dpi=96)
+knitr::opts_chunk$set(fig.width = 10, fig.height = 8)
+
+options(warn = -1)
+options(dplyr.summarise.inform = F)
+
+```
+
+```{r read_in, include=FALSE, message=FALSE, warning= F}
+setwd("C:/Users/jfan/Desktop/w210")
+source("EDA_processing.R")
+
+```
+
+# Key Insights
+* The most common topics that would be relevant for college student mental health are Problems with Friends (14.2%) and Academic Pressure (12.3%). 
+  * Other topics that would be relevant only have a handful of sessions: Appearance Anxiety, Conflict with Parents, Procrastination, School Bullying
+* Users with very intense emotions benefit the most from the sessions, with 1/3 of users with an emotion intensity score of 5 moving down to 1 and 1/2 of users with 4 moving down to 2 after the counseling session.
+* The most common strategies for when the user is disgusted, fearful, or sad is to affirm them and ask them questions. When users seemed surprised, counselors tend to provide information. 
+
+# General
+
+
+## Turns per Conversation
+
+* Number of turns per conversation ranges between 6-38 turns, with the median being at 11 turns. 
+* The most frequent number of turns is 10 turns, making up almost 1/4 of conversations 
+
+```{r, echo=F}
+custom_ticks = c(n_turns_min, seq(10, 35, 5), n_turns_max)
+
+hist_turns %>% 
+  hchart("column", hcaes(x = "turns", y = "count")) %>% 
+  hc_title(text = "# Conversation Turns per Session", align = "left") %>%
+  hc_subtitle(text = "Conversation turn is a user query and counselor response<br>Conversations filtered to just those in which the user rated the counselor as highly empathetic and responses are highly relevant", align = "left") %>% 
+  hc_xAxis(labels = list(rotation = 0), 
+           title = list(text = "Turns"),
+           tickPositions = custom_ticks,
+          plotLines = list(
+            list(
+              color = "red",
+              width = 2,
+              value = n_turns_med,
+              dashStyle = "Dash",
+              label = list(
+                text = paste0("Median: ", n_turns_med, " Turns"),
+                align = "top",
+                verticalAlign = "top",
+                rotation = 0,
+                style = list(color = "red", 
+                             fontSize = "12px")
+                )))) %>% 
+  hc_yAxis(max = 225, title = list(text = "")) %>% 
+  hc_plotOptions(column = list(pointPadding = 0,
+                               groupPadding = 0)) %>% 
+  hc_tooltip(formatter = JS("function() { 
+                            return 'Turns: ' + this.point.turns + '<br>Count: ' + this.point.count + '<br>Percent: ' + this.point.percent + '%'}"))
+  
+
+```
+
+## Session Problem & Emotion Type
+
+* The most common problems brought up during the counseling sessions, accounting for 2/3 of the sessions, are Ongoing Depression, Job Crisis, and Breakup with Partner. 
+  * The topics that would be most relevant for the mental health agent for college students (Problems with Friends, Academic Pressure, Appearance Anxiety, Conflict with Parents, Procrastination, School Bullying) make up around 30% of the sessions. 
+* The top 3 initial emotions going into the sessions are Depression, Anxiety, and Sadness 
+
+```{r, echo=F}
+n_pt %>% 
+  hchart("column", hcaes(x = "problem_type", y = "count")) %>% 
+  hc_plotOptions(column = list(dataLabels = list(enabled = T, format = "{point.y}"))) %>%
+  hc_title(text = "Session Problem Type Distribution", align = "left") %>% 
+  hc_xAxis(labels = list(rotation = -45), title = list(text = "Problem Type")) %>% 
+  hc_yAxis(title = list(text = "")) %>% 
+  hc_tooltip(formatter = JS("function() { 
+                            return this.point.problem_type + ': ' + this.point.count + '<br>Percent: ' + this.point.percent + '%'}"))
+
+```
+
+
+```{r, echo=F}
+n_et %>% 
+  hchart("column", hcaes(x = "emotion_type", y = "count")) %>% 
+  hc_plotOptions(column = list(dataLabels = list(enabled = T, format = "{point.y}"))) %>%
+  hc_title(text = "Session Emotion Type Distribution", align = "left") %>% 
+  hc_xAxis(labels = list(rotation = -45), title = list(text = "Emotion Type")) %>% 
+  hc_yAxis(title = list(text = "")) %>% 
+  hc_tooltip(formatter = JS("function() { 
+                            return this.point.emotion_type + ': ' + this.point.count + '<br>Percent: ' + this.point.percent + '%'}"))
+
+```
+
+
+## Session Effectiveness
+
+* All users who rated the counselor as highly empathetic and whose responses are relevant experienced a lower final emotion intensity than their initial emotion intensity.
+* Users who have very high initial emotion intensity benefit the most from the counseling sessions 
+  * ~1/3 of users who had an initial emotion intensity score of 5 move down to 1 after counseling session
+  * ~1/2 of users who had an initial emotion intensity score of 4 move down to 2 after counseling session 
+* Users with lower initial emotion intensity still observe a lowered emotion intensity after counseling sessions, though the change is more mild
+
+```{r, echo=F}
+
+fig <- plot_ly(
+  type = "sankey",
+  orientation = "h",
+  node = nodes,
+  link = links
+)
+
+fig <- fig %>% layout(
+  title = "Initial and Final Emotional Intensity Change",
+  font = list(
+    size = 10
+  ),
+  annotations = list(
+    x = 0, 
+    y = -0.1, 
+    text = paste0("N Participants: ", nrow(emotion_initial_final)),
+    xref = "paper",
+    yref = "paper",
+    showarrow = F
+  ),
+  hovermode = "closest", 
+  margin = list(t = 50)
+)
+fig
+
+```
+
+# Session Strategies
+
+## Strategies Distribution
+
+* When considering all strategies used in a session, the most common strategies used are Question, Other Strategy, Providing Suggestions, and then Affirmation and Reassurance. 
+* However, when considering the first strategy that the counselor uses to respond, the most common strategy is Other Strategy compared as opposed to a Question, and Affirmation and Reassurance takes a slight priority over Providing Suggestions. 
+
+```{r, echo=F}
+n_strategies %>% 
+  hchart("column", hcaes(x = "strategy", y = "count", group = "group")) %>% 
+  hc_plotOptions(column = list(dataLabels = list(enabled = T, format = "{point.y}"))) %>%
+  hc_title(text = "Counselor Strategies Frequency", align = "left") %>% 
+  hc_xAxis(labels = list(rotation = -45), title = list(text = "Strategy")) %>% 
+  hc_yAxis(title = list(text = "")) %>% 
+  hc_tooltip(formatter = JS("function() { 
+                            return 'Group: ' + this.series.name + '<br>' + this.point.strategy + ': ' + this.point.count + '<br>Percent: ' + this.point.percent + '%'}"))
+
+```
+
+## # Strategies Used
+
+* Most counselors only use 1 strategy after each user turn. 
+* Counselors employ 2 strategies in their response 1/6 out of all turns. < 2% of turns have 3 or more strategies used.  
+
+```{r, echo=F}
+n_strategies_turn %>% 
+  hchart("column", hcaes(x = "n_strategies", y = "count")) %>% 
+  hc_plotOptions(column = list(dataLabels = list(enabled = T, format = "{point.y}"))) %>%
+  hc_title(text = "Counselor Strategies Frequency per Turn", align = "left") %>% 
+  hc_xAxis(labels = list(rotation = 0), title = list(text = "# Strategies Used per Turn")) %>% 
+  hc_yAxis(title = list(text = "")) %>% 
+  hc_tooltip(formatter = JS("function() { 
+                            return this.point.n_strategies + ' Strategies: ' + this.point.count + '<br>Percent: ' + this.point.percent + '%'}"))
+
+```
+
+## Multiple Strategies Distribution
+
+* Of the turns in which the counselor uses multiple strategies, the most common strategy pairing is having 2 consecutive other strategies. 
+* The next most common combination is to give the user affirmation before asking a question. 
+
+```{r, echo=F}
+top_10_strats %>% 
+  kable() %>% 
+    column_spec (1:3,border_left = T, border_right = T) %>%
+      kable_styling(font_size = 12)
+```
+
+# Turn Strategies
+
+## Strategies by Turn
+
+* Following the trajectory of a conversation, the most common strategy at the beginning of the conversation is to ask questions and paraphrasing what the user has said. 
+* Next the counselor switch between giving the user reassurance and providing suggestions. 
+* Near the end of the conversation, the counselor will give information and employ other strategies. 
+
+```{r}
+strat_turn %>% 
+  hchart("line", hcaes(x = "num_turns", y = "percent", group = "first_strategy")) %>% 
+  hc_title(text = "First Strategy Distribution by Turn", align = "left") %>%
+  hc_xAxis(labels = list(rotation = 0), title = list(text = "Turn #")) %>% 
+  hc_yAxis(max = 100, title = list(text = "%", rotation = 0)) %>%  
+  hc_tooltip(formatter = JS("function() { 
+                            return 'Turn: ' + this.point.num_turns + '<br>' + this.point.first_strategy + ': ' + Highcharts.numberFormat(this.point.percent, 1) + '%'}"))
+```
+
+## Strategies by Turn Emotion
+
+* Counselors will employ a multitude of strategies when the user seems angry or neutral, indicating there is ambiguity and not one correct strategy. 
+* The most common strategies for when the user is disgusted, fearful, or sad is to affirm and ask them question. 
+* When the user seems surprised, the counselor generally provides suggestions. 
+
+```{r}
+emotion_strategy %>% 
+  hchart("bar", hcaes(x = "user_turn_emotion", y = "percent", group = "first_strategy")) %>% 
+  hc_title(text = "First Strategy Distribution by Turn Emotion", align = "left") %>%
+  hc_xAxis(labels = list(rotation = 0), title = list(text = "User Turn<br>Emotion", rotation = 0)) %>%  
+  hc_yAxis(title = list(text = "", rotation = 0)) %>%   
+  hc_plotOptions(bar = list(dataLabels = list(enabled = T, format = "{point.y:,.1f}%"))) %>% 
+  hc_tooltip(formatter = JS("function() { 
+                            return 'User Emotion: ' + this.point.user_turn_emotion + '<br>' + this.point.first_strategy + ': ' + Highcharts.numberFormat(this.point.percent, 1) + '%'}"))
+```
+

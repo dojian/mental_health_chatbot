@@ -1,1 +1,1 @@
-# mental_health_chatbot
+# GenZen: Mental Health Chatbot

@@ -17,7 +17,7 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
 
     ### Logging ###
     logging.basicConfig(filename="genzen-backend-log.log", encoding="utf-8", level=logging.DEBUG)
-
+    logging.info("--------------------------------------------------------------------------------")
     logging.info(f"{datetime.now()}: LIFESPAN - Startup Initiated")
     
     ### Redis ###
@@ -37,3 +37,4 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     await app.state.redis.close()
     conn.close()
     logging.info(f"{datetime.now()}: LIFESPAN - Shutdown Complete")
+    logging.info("--------------------------------------------------------------------------------")

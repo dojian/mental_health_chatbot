@@ -17,3 +17,13 @@ Integrate minikube with docker: `eval $(minikube docker-env)`
 ### Kustomize Notes
 apply dev overlay: `kubectl apply -k .k8s/overlays/dev`
 delete dev overlay: `kubectl delete -k .k8s/overlays/dev`
+
+
+```json
+{
+  "username": "lphansiri",
+  "password": "strongpassword",
+  "email": "phansiri@berkeley.edu",
+  "role": "admin"
+}
+```

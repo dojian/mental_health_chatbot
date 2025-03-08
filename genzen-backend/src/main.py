@@ -1,17 +1,11 @@
 from fastapi import FastAPI
+# import uuid
+from src.connections.lifespan import lifespan
 
-app = FastAPI()
+from src.routers import base, auth
 
-@app.get("/health")
-async def get_health():
-    '''
-    Returns a status check indicating if the service is healthy.
-    '''
-    return {"status": "healthy"}
+app = FastAPI(lifespan=lifespan)
 
-@app.get("/hello")
-async def get_hello(name: str):
-    '''
-    Takes a parameter of name and returns a json object with the parameter.
-    '''
-    return {"message": f"Hello {name}"}
+### API Routes ###
+app.include_router(base.router)
+app.include_router(auth.router, prefix="/auth", tags=["auth"])

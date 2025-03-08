@@ -5,7 +5,7 @@ from src.models.schemas import ChatRequest
 from src.connections.db import get_session
 from src.utils.auth_utils import get_current_user
 from langchain_openai import ChatOpenAI
-import uuid, logging
+import uuid
 
 
 router = APIRouter()

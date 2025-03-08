@@ -1,5 +1,4 @@
 from fastapi import FastAPI
-# import uuid
 from src.connections.lifespan import lifespan
 
 from src.routers import base, auth, chat

@@ -6,10 +6,11 @@ FROM python:3.13-alpine AS base
 WORKDIR /app
 
 # Update and install poetry
-RUN apk add --no-cache gcc musl-dev libffi-dev openssl-dev python3-dev && \
+RUN apk add --no-cache gcc musl-dev libffi-dev openssl-dev python3-dev cargo && \
     # pip install --upgrade pip && \
     pip install poetry && \
-    apk del gcc musl-dev libffi-dev python3-dev openssl-dev
+    apk del gcc musl-dev libffi-dev python3-dev openssl-dev && \
+    rm -rf /var/cache/apk/*
 
 # Copy poetry declarative instruction files
 COPY pyproject.toml poetry.lock ./

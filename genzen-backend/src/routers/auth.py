@@ -1,6 +1,6 @@
-from fastapi import APIRouter, HTTPException, Depends, Request, status
+from fastapi import APIRouter, HTTPException, Depends, status
 from fastapi.security import OAuth2PasswordRequestForm, OAuth2PasswordBearer
-from datetime import timedelta, datetime
+# from datetime import timedelta, datetime
 import jwt
 import uuid
 import os
@@ -8,49 +8,20 @@ import os
 from src.models.schemas import Token, CreateGenZenUser
 from src.models.models import GenZenUser
 
-from passlib.context import CryptContext
+# from passlib.context import CryptContext
 from src.connections.db import get_session
 from src.connections.redis_cache import get_redis_client
+
+from src.utils.auth_utils import verify_password, get_password_hash, get_user, create_access_token
 
 from dotenv import load_dotenv
 load_dotenv()
 
 JWT_SECRET = os.getenv("JWT_SECRET")
-ALGORITHM = "HS256"
-ACCESS_TOKEN_EXPIRE_MINUTES = 10
+ALGORITHM = os.getenv("ALGORITHM")
+ACCESS_TOKEN_EXPIRE_MINUTES = int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES"))
 
 router = APIRouter()
-
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
-
-def verify_password(plain_password: str, hashed_password: str) -> bool:
-    """
-    Verify the password.
-    """
-    return pwd_context.verify(plain_password, hashed_password)
-
-def get_password_hash(password: str) -> str:
-    """
-    Get a hashed password.
-    """
-    return pwd_context.hash(password)
-
-def get_user(username: str, session) -> GenZenUser | None:
-    """
-    Get a user by username.
-    """
-    user = session.query(GenZenUser).filter(GenZenUser.username == username).first()
-    return user
-
-def create_access_token(data: dict, expires_delta: timedelta | None = None) -> str:
-    """
-    Create an access token.
-    """
-    to_encode = data.copy()
-    expire = datetime.utcnow() + (expires_delta if expires_delta else timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES))
-    to_encode.update({"exp": int(expire.timestamp())})
-    encoded_jwt = jwt.encode(to_encode, JWT_SECRET, algorithm=ALGORITHM)
-    return encoded_jwt
 
 @router.post("/register", response_model=Token)
 async def register_user(user_create: CreateGenZenUser, redis = Depends(get_redis_client), session = Depends(get_session)):

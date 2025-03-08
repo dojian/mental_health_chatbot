@@ -18,7 +18,9 @@ Integrate minikube with docker: `eval $(minikube docker-env)`
 apply dev overlay: `kubectl apply -k .k8s/overlays/dev`
 delete dev overlay: `kubectl delete -k .k8s/overlays/dev`
 
-
+### Testing
+#### Test Registration /auth/register with Postman
+post with body raw as json
 ```json
 {
   "username": "lphansiri",
@@ -26,4 +28,19 @@ delete dev overlay: `kubectl delete -k .k8s/overlays/dev`
   "email": "phansiri@berkeley.edu",
   "role": "admin"
 }
+```
+
+#### Test Login /auth/login with Postman
+post with body form-data
+```json
+{
+  "username": "lphansiri",
+  "password": "strongpassword"
+}
+
+#### Test Logout /auth/logout with Postman
+post with headers
+```
+key: Authorization
+value: Bearer <JWT_token>
 ```

@@ -7,28 +7,9 @@ def reset_database():
     """
     Reset the database.
     """
-    commands = [
-        "DROP TABLE IF EXISTS users CASCADE",
-        (
-            "CREATE TABLE users (\n"
-            "    id SERIAL PRIMARY KEY,\n"
-            "    username VARCHAR(255) UNIQUE NOT NULL,\n"
-            "    hashed_password TEXT NOT NULL,\n"
-            "    role VARCHAR(50) NOT NULL\n"
-            ");"
-        ),
-        "DROP TABLE IF EXISTS sessions CASCADE",
-        (
-            "CREATE TABLE sessions (\n"
-            "    session_id UUID PRIMARY KEY,\n"
-            "    username VARCHAR(255) REFERENCES users(username) ON DELETE CASCADE,\n"
-            "    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP\n"
-            ");"
-        )
-    ]
     commands_drop = [
-        "DROP TABLE IF EXISTS users CASCADE",
-        "DROP TABLE IF EXISTS sessions CASCADE",
+        "DROP TABLE IF EXISTS genzenuser CASCADE",
+        "DROP TABLE IF EXISTS session CASCADE",
     ]
 
     conn = psycopg2.connect(

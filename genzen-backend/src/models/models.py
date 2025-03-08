@@ -5,7 +5,7 @@ from datetime import datetime
 from pydantic import EmailStr
 from sqlalchemy import String
 
-class User(SQLModel, table=True):
+class GenZenUser(SQLModel, table=True):
     id: int | None = Field(default=None, primary_key=True)
     username: str = Field(unique=True)
     hashed_password: str

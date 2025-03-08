@@ -5,8 +5,8 @@ import jwt
 import uuid
 import os
 
-from src.models.schemas import Token, CreateUser
-from src.models.models import User
+from src.models.schemas import Token, CreateGenZenUser
+from src.models.models import GenZenUser
 
 from passlib.context import CryptContext
 from src.connections.db import get_session
@@ -35,11 +35,11 @@ def get_password_hash(password: str) -> str:
     """
     return pwd_context.hash(password)
 
-def get_user(username: str, session) -> User | None:
+def get_user(username: str, session) -> GenZenUser | None:
     """
     Get a user by username.
     """
-    user = session.query(User).filter(User.username == username).first()
+    user = session.query(GenZenUser).filter(GenZenUser.username == username).first()
     return user
 
 def create_access_token(data: dict, expires_delta: timedelta | None = None) -> str:
@@ -53,7 +53,7 @@ def create_access_token(data: dict, expires_delta: timedelta | None = None) -> s
     return encoded_jwt
 
 @router.post("/register", response_model=Token)
-async def register_user(user_create: CreateUser, redis = Depends(get_redis_client), session = Depends(get_session)):
+async def register_user(user_create: CreateGenZenUser, redis = Depends(get_redis_client), session = Depends(get_session)):
     """
     Register a new user.
     """
@@ -69,7 +69,11 @@ async def register_user(user_create: CreateUser, redis = Depends(get_redis_clien
     
     # Hash password and insert new user into database
     hashed_password = get_password_hash(user_create.password)
-    new_user = User(username=user_create.username, hashed_password=hashed_password, role=user_create.role)
+    new_user = GenZenUser(
+        username=user_create.username, 
+        hashed_password=hashed_password,
+        email=user_create.email,
+        role=user_create.role)
     session.add(new_user)
     session.commit()
     session.refresh(new_user)

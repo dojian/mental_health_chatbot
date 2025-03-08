@@ -18,12 +18,94 @@ Integrate minikube with docker: `eval $(minikube docker-env)`
 apply dev overlay: `kubectl apply -k .k8s/overlays/dev`
 delete dev overlay: `kubectl delete -k .k8s/overlays/dev`
 
-
+### Testing
+#### Test Registration /auth/register with Postman
+post with body raw as json
 ```json
 {
-  "username": "lphansiri",
+  "username": "testuser",
   "password": "strongpassword",
-  "email": "phansiri@berkeley.edu",
-  "role": "admin"
+  "email": "example@example.com",
 }
 ```
+
+Returns a response as a json
+```json
+{
+  "access_token": <JWT_token>,
+  "token_type": "bearer"
+}
+```
+
+#### Test Login /auth/login with Postman
+post with body form-data
+```json
+{
+  "username": "testuser",
+  "password": "strongpassword"
+}
+```
+
+Returns a response as a json
+```json
+{
+  "access_token": <JWT_token>,
+  "token_type": "bearer"
+}`
+
+#### Test Logout /auth/logout with Postman
+post with headers
+```
+key: Authorization
+value: Bearer <JWT_token>
+```
+
+Returns a response as a json
+```json
+{
+  "message": "Successfully logged out"
+}
+```
+
+#### Test /v1/chat with Postman
+post with headers AND body raw as json
+```
+key: Authorization
+value: Bearer <JWT_token>
+```
+```json
+{
+  "query": "What is the capital of France?"
+}
+```
+
+Returns a response from OpenAI.
+```json
+{
+  "session_id": <session_id>,
+  "query": "What is the capital of France?",
+  "response": "The capital of France is Paris."
+}
+```
+
+#### Test /v1/chat/sessions with Postman
+get with headers
+```
+key: Authorization
+value: Bearer <JWT_token>
+```
+
+Returns a list of all chat sessions for the current user.
+```json
+[
+  {
+    "session_id": <session_id>,
+    "created_at": "2023-03-14T18:30:00.000000",
+    "first_query": "What is the capital of France?"
+  },
+  {
+    "session_id": <session_id>,
+    "created_at": "2023-03-14T18:30:00.000000",
+    "first_query": "What is the capital of France?"
+  }
+]

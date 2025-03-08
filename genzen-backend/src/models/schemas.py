@@ -10,3 +10,7 @@ class CreateGenZenUser(BaseModel):
     password: str
     email: EmailStr
     role: str # user or admin
+
+class ChatRequest(BaseModel):
+    query: str
+    session_id: str | None = None  # Optional field for existing sessions

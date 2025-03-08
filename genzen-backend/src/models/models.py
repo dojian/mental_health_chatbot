@@ -1,7 +1,7 @@
 # from typing import Annotated
 
-from sqlmodel import Field, SQLModel
-from datetime import datetime
+from sqlmodel import Field, SQLModel, Relationship
+import datetime
 from pydantic import EmailStr
 from sqlalchemy import String
 
@@ -18,7 +18,16 @@ class GenZenUser(SQLModel, table=True):
     )
     role: str
 
-class Session(SQLModel, table=True):
-    session_id: str = Field(default=None, primary_key=True)
-    username: str
-    created_at: datetime = Field(default_factory=lambda: datetime.utcnow())
+class ChatSession(SQLModel, table=True):
+    id: int | None = Field(default=None, primary_key=True)
+    session_id: str = Field(unique=True, index=True)
+    user_id: int = Field(foreign_key="genzenuser.id")
+    created_at: datetime.datetime = Field(default_factory=lambda: datetime.datetime.now(datetime.timezone.utc))
+
+class ChatHistory(SQLModel, table=True):
+    id: int | None = Field(default=None, primary_key=True)
+    session_id: str = Field(index=True)
+    user_id: int = Field(foreign_key="genzenuser.id")
+    role: str = Field(index=True) # user or assistant
+    message: str
+    timestamp: datetime.datetime = Field(default_factory=lambda: datetime.datetime.now(datetime.timezone.utc))

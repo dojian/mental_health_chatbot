@@ -17,88 +17,29 @@ async def list_chat_sessions(session = Depends(get_session), current_user = Depe
     """
     List all chat sessions for the current user."
     """
-    chat_sessions = session.query(ChatSession).filter(ChatSession.user_id == current_user.id).all()
-    return [{
-        "session_id": cs.session_id,
-        "created_at": cs.created_at
-    } for cs in chat_sessions]
+    chat_sessions = (
+        session.query(ChatSession)
+        .filter(ChatSession.user_id == current_user.id)
+        .all()
+    )
+    session_list = []
+    for chat_session in chat_sessions:
+        first_message = (
+            session.query(ChatHistory)
+            .filter(
+                ChatHistory.session_id == chat_session.session_id,
+                ChatHistory.role == "user"
+            )
+            .order_by(ChatHistory.timestamp)
+            .first()
+        )
+        session_list.append({
+            "session_id": chat_session.session_id,
+            "created_at": chat_session.created_at,
+            "first_query": first_message.message if first_message else "No query yet"
+        })
+    return session_list
 
-
-# @router.get("/chat")
-# async def chat(
-#     request: ChatRequest,
-#     session: Session = Depends(get_session),
-#     current_user: GenZenUser = Depends(get_current_user),
-# ):
-#     """
-#     Handles user queries and returns responses from OpenAI.
-#     """
-
-#     context = {}
-
-#     # context['request'] = request.query
-
-#     if request.session_id:
-#         chat_session = session.query(ChatSession).filter(
-#             ChatSession.session_id == session_id,
-#             ChatSession.user_id == current_user.id
-#         ).first()
-#         if not chat_session:
-#             raise HTTPException(status__code=status.HTTP_404_NOT_FOUND, detail="Session not found")
-#     else:
-#         session_id = f"{current_user.id}-{uuid.uuid4().hex}"
-#         chat_session = ChatSession(
-#             session_id=session_id,
-#             user_id=current_user.id,
-#         )
-#         session.add(chat_session)
-#         session.commit()
-    
-#     context["session_id"] = session_id
-
-#     existing_messages = (
-#         session.query(ChatHistory)
-#         .filter(ChatHistory.session_id == session_id)
-#         .order_by(ChatHistory.timestamp)
-#         .all()
-#     )
-
-#     messages = [
-#         {"role": message.role, "content": message.message}
-#         for message in existing_messages
-#     ]
-
-#     messages.append({"role": "user", "content": request.query})
-
-#     try:
-#         openai_response = model.invoke(messages)
-#         assistant_msg_txt = openai_response.content
-#     except Exception as e:
-#         raise HTTPException(
-#             status_code=500,
-#             detail=f"Error communicating with OpenAI: {str(e)}"
-#         )
-
-#     user_msg = ChatHistory(
-#         session_id=session_id,
-#         user_id=current_user.id,
-#         role="user",
-#         message=request.query,
-#     )
-
-#     context['assistant_msg_txt'] = assistant_msg_txt
-
-#     assistant_msg = ChatHistory(
-#         session_id=session_id,
-#         user_id=current_user.id,
-#         role="assistant",
-#         message=assistant_msg_txt,
-#     )
-#     session.add_all([user_msg, assistant_msg])
-#     session.commit()
-
-
-#     return {"response": context}
 
 @router.post("/chat")
 async def chat(

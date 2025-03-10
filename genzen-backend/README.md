@@ -2,8 +2,18 @@
 
 This is the backend for the GenZen Chatbot.
 
+### Requirements
+For Local Testing and Development:
+- Docker Containers
+  - Redis:7.4.2-alpine
+  - Postgres:14--alpine
+
+For Local Kubernetes Deployment:
+- Minikube (running on top of Docker)
+- Kubectl
+
 ### Agents Notes
-make sure you add your api key in .env file by:
+make sure you add your api key in .env file either directly or by:
 echo "OPENAI_API_KEY=\"$OPENAI_API_KEY\"" > genzen-backend/src/agents/.env
 
 ### Misc Notes

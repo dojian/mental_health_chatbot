@@ -2,6 +2,16 @@
 
 This is the backend for the GenZen Chatbot.
 
+### Requirements
+For Local Testing and Development:
+- Docker Containers
+  - Redis:7.4.2-alpine
+  - Postgres:14--alpine
+
+For Local Kubernetes Deployment:
+- Minikube (running on top of Docker)
+- Kubectl
+
 ### Misc Notes
 run server: `poetry run uvicorn src.main:app --reload --port 8001` or `./start_backend.sh`
 

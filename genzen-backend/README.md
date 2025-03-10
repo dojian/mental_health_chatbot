@@ -12,6 +12,10 @@ For Local Kubernetes Deployment:
 - Minikube (running on top of Docker)
 - Kubectl
 
+### Agents Notes
+make sure you add your api key in .env file either directly or by:
+echo "OPENAI_API_KEY=\"$OPENAI_API_KEY\"" > genzen-backend/src/agents/.env
+
 ### Misc Notes
 run server: `poetry run uvicorn src.main:app --reload --port 8001` or `./start_backend.sh`
 

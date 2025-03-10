@@ -2,6 +2,10 @@
 
 This is the backend for the GenZen Chatbot.
 
+### Agents Notes
+make sure you add your api key in .env file by:
+echo "OPENAI_API_KEY=\"$OPENAI_API_KEY\"" > genzen-backend/src/agents/.env
+
 ### Misc Notes
 run server: `poetry run uvicorn src.main:app --reload --port 8001` or `./start_backend.sh`
 

@@ -16,7 +16,7 @@ class GenZenUser(SQLModel, table=True):
         nullable=False,
         description="Email address of the user"
     )
-    role: str
+    role: str = Field(default="user")
 
 class ChatSession(SQLModel, table=True):
     id: int | None = Field(default=None, primary_key=True)

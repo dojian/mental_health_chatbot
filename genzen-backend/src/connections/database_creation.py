@@ -8,10 +8,10 @@ def reset_database():
     Reset the database.
     """
     commands_drop = [
-        # "DROP TABLE IF EXISTS genzenuser CASCADE",
-        "DROP TABLE IF EXISTS session CASCADE",
+        "DROP TABLE IF EXISTS genzenuser CASCADE",
         "DROP TABLE IF EXISTS chathistory CASCADE",
         "DROP TABLE IF EXISTS chatsession CASCADE",
+
 
     ]
 

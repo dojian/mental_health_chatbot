@@ -9,7 +9,7 @@ class CreateGenZenUser(BaseModel):
     username: str
     password: str
     email: EmailStr
-    role: str # user or admin
+    role: str = "user" # user or admin
 
 class ChatRequest(BaseModel):
     query: str

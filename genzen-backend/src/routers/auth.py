@@ -5,8 +5,8 @@ import jwt
 import uuid
 import os
 
-from src.models.schemas import Token, CreateGenZenUser
-from src.models.models import GenZenUser
+from src.models.pydantic_schemas import Token, CreateGenZenUser
+from src.models.db_models import GenZenUser
 
 # from passlib.context import CryptContext
 from src.connections.db import get_session

@@ -1,12 +1,19 @@
-from langchain_core.messages import SystemMessage
+from langchain_core.messages import SystemMessage, HumanMessage
 from langchain_openai import ChatOpenAI
 
 from langgraph.graph import START, StateGraph, MessagesState
 from langgraph.prebuilt import tools_condition, ToolNode
 
-from tools import mental_health
+from src.agents.tools import mental_health
+
+import os
+from dotenv import load_dotenv
+load_dotenv()
+
 # Tool
 tools = [mental_health]
+
+OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 
 # Define LLM with bound tools
 llm = ChatOpenAI(model="gpt-4o-mini")
@@ -51,3 +58,10 @@ builder.add_edge("tools", "assistant")
 
 # Compile graph
 graph = builder.compile()
+
+messages = [HumanMessage(content="I feel sad and anxious about my mental health.")]
+
+messages = graph.invoke({"messages": messages})
+
+for m in messages['messages']:
+    m.pretty_print()

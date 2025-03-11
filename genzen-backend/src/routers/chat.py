@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlmodel import Session
-from src.models.models import GenZenUser, ChatHistory, ChatSession
-from src.models.schemas import ChatRequest
+from src.models.db_models import GenZenUser, ChatHistory, ChatSession
+from src.models.pydantic_schemas import ChatRequest
 from src.connections.db import get_session
 from src.utils.auth_utils import get_current_user
 from langchain_openai import ChatOpenAI

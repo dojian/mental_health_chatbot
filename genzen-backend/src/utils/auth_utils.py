@@ -1,4 +1,4 @@
-from src.models.models import GenZenUser
+from src.models.db_models import GenZenUser
 from datetime import timedelta, datetime
 from sqlalchemy.orm import Session
 import os

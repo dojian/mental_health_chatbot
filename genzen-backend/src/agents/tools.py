@@ -9,19 +9,20 @@ def mental_health(user_history: str, user_text: str) -> Dict:
     endpoint = 'huggingface-pytorch-tgi-inference-2025-03-09-23-30-16-495'
 
     # Format the input prompt
-    prompt = f"""Given a student's Conversation History and Current Message, extract the relevant metadata, including emotion type, emotion intensity (1-5), problem type, and counseling strategy.
-Then answer the student's Current Message as a counselor based on the metadata. Keep it concise but affirmative.
-The counselor must return a Structured JSON Response with these fields: "emotion_type","emotion_intensity", "problem_type", "counseling_strategy","answer".
+    prompt = f"""
+    Given a student's Conversation History and Current Message, extract the relevant metadata, including emotion type, emotion intensity (1-5), problem type, and counseling strategy.
+    Then answer the student's Current Message as a counselor based on the metadata. Keep it concise but affirmative.
+    The counselor must return a Structured JSON Response with these fields: "emotion_type","emotion_intensity", "problem_type", "counseling_strategy","answer".
 
-### Student:
-**Conversation History:**
-{user_history}
+    ### Student:
+    **Conversation History:**
+    {user_history}
 
-**Current Message:**
-{user_text}
+    **Current Message:**
+    {user_text}
 
-### Counselor Structured JSON Response:
-"""
+    ### Counselor Structured JSON Response:
+    """
 
     # Prepare payload
     payload = {

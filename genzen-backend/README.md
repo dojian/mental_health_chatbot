@@ -4,9 +4,23 @@ This is the backend for the GenZen Chatbot.
 
 ### Requirements
 For Local Testing and Development:
-- Docker Containers
+- Must have Redis and Postgres Docker Containers running
   - Redis:7.4.2-alpine
+```bash
+docker run -d -p 6379:6379 redis:7.4.2-alpine
+```
   - Postgres:14--alpine
+```bash
+docker run -e POSTGRES_USER=postgres_user -e POSTGRES_PASSWORD=supersecretpassword -e POSTGRES_DB=postgres_db_name -p 5432:5432 -d postgres:14-alpine
+```
+- Ensure in the root directory of `genzen-backend`
+```bash
+poetry install # active env and install all dependencies
+```
+- Run Server
+```bash
+poetry run uvicorn src.main:app --reload --port 8001
+```
 
 For Local Kubernetes Deployment:
 - Minikube (running on top of Docker)
@@ -15,9 +29,6 @@ For Local Kubernetes Deployment:
 ### Agents Notes
 make sure you add your api key in .env file either directly or by:
 echo "OPENAI_API_KEY=\"$OPENAI_API_KEY\"" > genzen-backend/src/agents/.env
-
-### Misc Notes
-run server: `poetry run uvicorn src.main:app --reload --port 8001` or `./start_backend.sh`
 
 ### Docker Notes
 Build the image: `docker build -t genzen-backend:v01 .`

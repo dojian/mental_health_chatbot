@@ -22,6 +22,9 @@ settings = Settings()
 
 SQLALCHEMY_DB_URI = f"postgresql://{settings.POSTGRES_USER}:{settings.POSTGRES_PASSWORD}@{settings.POSTGRES_HOST}:{settings.POSTGRES_PORT}/{settings.POSTGRES_DB}"
 
+def get_postgres_url():
+    return SQLALCHEMY_DB_URI
+
 engine = create_engine(
     SQLALCHEMY_DB_URI,
     echo=True

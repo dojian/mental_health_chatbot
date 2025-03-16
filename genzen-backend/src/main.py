@@ -3,7 +3,9 @@ from src.connections.lifespan import lifespan
 
 from src.routers import base, auth, chat
 
-app = FastAPI(lifespan=lifespan)
+app = FastAPI(title="GenZen Backend", 
+              description="A Simple AI Agent API application for mental health", 
+              lifespan=lifespan)
 
 ### API Routes ###
 app.include_router(base.router)

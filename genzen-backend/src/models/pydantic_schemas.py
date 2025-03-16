@@ -13,4 +13,3 @@ class CreateGenZenUser(BaseModel):
 
 class ChatRequest(BaseModel):
     query: str
-    session_id: str | None = None  # Optional field for existing sessions

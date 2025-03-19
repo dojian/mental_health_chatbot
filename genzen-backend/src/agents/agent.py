@@ -1,10 +1,14 @@
-from langchain_core.messages import SystemMessage
+from langchain_core.messages import SystemMessage, HumanMessage
 from langchain_openai import ChatOpenAI
 
 from langgraph.graph import START, StateGraph, MessagesState
 from langgraph.prebuilt import tools_condition, ToolNode
 
+from dotenv import load_dotenv
+load_dotenv()
+
 from tools import mental_health
+
 # Tool
 tools = [mental_health]
 
@@ -51,3 +55,11 @@ builder.add_edge("tools", "assistant")
 
 # Compile graph
 graph = builder.compile()
+
+messages=[HumanMessage(content="I feel sad about my calculus homework. I don't know if i will be about to understand the chain rule.")]
+# Invoke graph
+result=graph. invoke({"messages": messages})
+
+# Print the messages
+for m in result['messages']:
+    m.pretty_print()

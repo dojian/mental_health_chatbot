@@ -1,12 +1,13 @@
 import boto3
 import json
 from typing import Dict
+import timeit
 
 def mental_health(user_history: str, user_text: str) -> Dict:
     """Calls the SageMaker endpoint for mental health counseling response."""
 
     sm_runtime = boto3.client('sagemaker-runtime')
-    endpoint = 'huggingface-pytorch-tgi-inference-2025-03-09-23-30-16-495'
+    endpoint = 'huggingface-pytorch-tgi-inference-2025-03-18-22-23-42-734'
 
     # Format the input prompt
     prompt = f"""
@@ -36,18 +37,33 @@ def mental_health(user_history: str, user_text: str) -> Dict:
         }
     }
 
+    start_time = timeit.default_timer()
+    print(f"Time start: {start_time}")
     # Invoke SageMaker endpoint
     response = sm_runtime.invoke_endpoint(
         EndpointName=endpoint, 
         ContentType='application/json', 
         Body=json.dumps(payload)
     )
-
+    end_time = timeit.default_timer()
+    print(f"Time end: {end_time}")
+    print(f"Time taken: {end_time - start_time} seconds")
     # Process response
     result_body = json.loads(response['Body'].read().decode('utf-8'))
 
     # Extract and parse structured JSON response
     response_text = result_body[0]['generated_text']
+
+    print('--response----------------------------')
+    print(response_text)
+    print('--response----------------------------')
+
+
+
     structured_response = response_text.split("### Counselor Structured JSON Response:")[1].strip()
+
+    print('--structured response----------------------------')
+    print(structured_response)
+    print('--structured response----------------------------')
 
     return json.loads(structured_response)  # Convert string response into JSON

@@ -1,50 +1,91 @@
-from src.test_agent.tools import add, divide
+from src.test_agent.tools import empathic_dialogue
 from langgraph.graph import MessagesState
 from langchain_core.messages import SystemMessage, HumanMessage
 from langgraph.graph import START, StateGraph, END
 from langgraph.prebuilt import tools_condition, ToolNode
 from src.connections.llm_client import get_llm_client
+from typing import Annotated
+from typing_extensions import TypedDict
+from langgraph.graph.message import AnyMessage, add_messages
+from langchain_core.runnables import Runnable
+from pprint import pprint
 
+### Medium
+# from langchain_core.tools import tool
+# from langchain_community.tools.tavily_search import TavilySearchResults
+from langchain_core.prompts import ChatPromptTemplate
+# from langchain_core.runnables import Runnable
+# from langchain_aws import ChatBedrock
+# import boto3
+# from typing import Annotated
+# from typing_extensions import TypedDict
+# from langgraph.graph.message import AnyMessage, add_messages
+from langchain_core.messages import ToolMessage
+from langchain_core.runnables import RunnableLambda
+# from langgraph.prebuilt import ToolNode
+# from langgraph.prebuilt import tools_condition
+
+# Create Memory
 import sqlite3
-from langgraph.checkpoint.sqlite.aio import AsyncSqliteSaver as SqliteSaver
+from langgraph.checkpoint.sqlite import SqliteSaver
 local_file = "test_agent.sqlite"
 conn = sqlite3.connect(local_file, check_same_thread=False)
 memory = SqliteSaver(conn)
 
-class State(MessagesState):
-    summary: str
+class State(TypedDict):
+    messages: Annotated[list[AnyMessage], add_messages]
 
-tools = [add, divide]
+# Create LLM with tools
+tools = [empathic_dialogue]
 llm = get_llm_client(temperature=.2)
 llm_with_tools = llm.bind_tools(tools, parallel_tool_calls=False)
 
-sys_msg = SystemMessage(content="You are a helpful assistant tasked with performing arithmetic on a set of inputs.")
+# Set up Agent called Assistant
+# sys_msg = SystemMessage(content="You are a helpful assistant tasked to find the root cause of a user's emotional state.")
 
-def assistant(state: MessagesState):
-    return {
-        "messages": [llm_with_tools.invoke([sys_msg] + state["messages"])],
-    }
+def run_llm(state: State):
+    messages = state["messages"]
+    response = llm_with_tools.invoke(messages)
+    return {"messages": [response]}
 
-builder = StateGraph(MessagesState)
-builder.add_node("assistant", assistant)
-builder.add_node("tools", ToolNode(tools))
+builder = StateGraph(State)
+builder.add_node("llm", run_llm)
 
-builder.add_edge(START, "assistant")
-builder.add_conditional_edges(
-    "assistant",
-    # If the latest message (result) from assistant is a tool call -> tools_condition routes to tools
-    # If the latest message (result) from assistant is a not a tool call -> tools_condition routes to END
-    tools_condition,
-    END
-)
-builder.add_edge("tools", "assistant")
+builder.add_edge(START, "llm")
+builder.add_edge("llm", END)
 
-react_graph = builder.compile(checkpointer=memory)
+graph = builder.compile()
+
+messages = [HumanMessage(content="tell me a joke")]
+result = graph.invoke({"messages": messages})
+print(result['messages'][-1].content)
+
+# builder = StateGraph(MessagesState)
+# builder.add_node("assistant", assistant)
+# builder.add_node("tools", ToolNode(tools))
+
+# builder.add_edge(START, "assistant")
+# builder.add_conditional_edges(
+#     "assistant",
+#     tools_condition,
+#     END
+# )
+# builder.add_edge("tools", "assistant")
+
+# react_graph = builder.compile(checkpointer=memory)
+
+
+
+
+
+
+
+
 
 
 # messages = [HumanMessage(content="tell me a joke")]
 # messages = [HumanMessage(content="Add 6 and 4. Divide the output by 5")]
-messages = [HumanMessage(content="what was the joke again?")]
+# messages = [HumanMessage(content="what was the joke again?")]
 
 
 # Short Term: Thread ID will be sed for each session aka conversation - save full convo his for the session in checkpoints
@@ -56,10 +97,10 @@ messages = [HumanMessage(content="what was the joke again?")]
 # checkpoint_id: specific checkpoint within a thread
 
 
-config = {"configurable": {"thread_id": "lit-another"}}
+# config = {"configurable": {"thread_id": "lit-another"}}
 # config = {"configurable": {"thread_id": "lit-test"}}
 
-messages = react_graph.invoke({"messages": messages}, config=config)
+# messages = react_graph.invoke({"messages": messages}, config=config)
 
-for m in messages['messages']:
-    m.pretty_print()
+# for m in messages['messages']:
+#     m.pretty_print()

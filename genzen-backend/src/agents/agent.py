@@ -59,9 +59,9 @@ builder.add_edge("tools", "assistant")
 # Compile graph
 graph = builder.compile()
 
-messages = [HumanMessage(content="I feel sad and anxious about my mental health.")]
+# messages = [HumanMessage(content="I feel sad about not having friends. I am anxious about making new friends. I was bullied when I was younger.")]
 
-messages = graph.invoke({"messages": messages})
+# messages = graph.invoke({"messages": messages})
 
-for m in messages['messages']:
-    m.pretty_print()
+# for m in messages['messages']:
+#     m.pretty_print()

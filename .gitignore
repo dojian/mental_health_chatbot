@@ -19,6 +19,9 @@ start_backend.sh
 *.db
 *.db-shm
 *.db-wal
+*.sqlite
+*.sqlite-shm
+*.sqlite-wal
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

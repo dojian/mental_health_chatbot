@@ -10,7 +10,7 @@ import logging
 
 
 ### Single Agent ###
-from src.test_agent.tools import add, divide
+from src.test_agent.tools import empathic_dialogue
 from langgraph.graph import MessagesState
 from langchain_core.messages import SystemMessage, HumanMessage, RemoveMessage
 from langgraph.graph import START, StateGraph, END
@@ -31,11 +31,11 @@ class State(MessagesState):
     summary: str
 
 ### Tool set up
-tools = [add, divide]
-llm = get_llm_client(temperature=.2)
+tools = [empathic_dialogue]
+llm = get_llm_client(temperature=0.2)
 llm_with_tools = llm.bind_tools(tools, parallel_tool_calls=False)
 
-sys_msg = SystemMessage(content="You are a helpful assistant tasked with performing summarization on the input.")
+sys_msg = SystemMessage(content="You are a helpful assistant tasked with providing empathic support.")
 
 def assistant(state: MessagesState):
     return {
@@ -81,7 +81,7 @@ def build_agent():
     builder = StateGraph(State)
     builder.add_node("talker", call_model)
     builder.add_node(summarize_conversation)
-    # builder.add_node("tools", ToolNode(tools))
+    builder.add_node("tools", ToolNode(tools))
 
     builder.add_edge(START, "talker")
     builder.add_conditional_edges("talker", summarize_conversation)
@@ -113,7 +113,12 @@ async def chat_with_agent(request: Request, chat_request: ChatRequest, current_u
     Test to reachout using the agent
     """
     user_id = current_user.id
-    config = {"configurable": {"thread_id": f"user_{user_id}_session_1"}}
+    config = {
+        "configurable": {
+            "thread_id": f"user_{user_id}_session_1",  # Short-term memory (conversation history)
+            # "checkpoint_ns": f"user_{user_id}_attributes",  # Long-term memory (user-specific attributes)
+        }
+    }
     messages = react_graph.invoke({"messages": [{"role": "user", "content": chat_request.query}]}, config=config)
     # graph = create_agent(store=request.app.state.store, checkpointer=request.app.state.checkpointer)
 

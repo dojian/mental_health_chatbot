@@ -1,18 +1,20 @@
+import uuid
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlmodel import Session
+
+from langchain_openai import ChatOpenAI
+from langchain_core.messages import HumanMessage
+
 from src.models.models import GenZenUser, ChatHistory, ChatSession
 from src.models.schemas import ChatRequest
 from src.connections.db import get_session
 from src.utils.auth_utils import get_current_user
-from langchain_openai import ChatOpenAI
-import uuid
-from src.agents.agent import graph
-from langchain_core.messages import HumanMessage
-
+from src.agents.agent import graph, llm, llm_with_tools
 
 router = APIRouter()
 
-model = ChatOpenAI(model="gpt-4o-mini", temperature=0.7)
+model = llm
+model_with_tools = llm_with_tools
 
 @router.get("/chat/sessions")
 async def list_chat_sessions(session = Depends(get_session), current_user = Depends(get_current_user)):
@@ -42,78 +44,85 @@ async def list_chat_sessions(session = Depends(get_session), current_user = Depe
         })
     return session_list
 
-# @router.post("/agent-chat")
-# async def agent_chat(
-#     request: ChatRequest,
-#     session: Session = Depends(get_session),
-#     current_user: GenZenUser = Depends(get_current_user),
-# ):
-#     """
-#     Handles user queries using the langgraph agent.
-#     """
-#     try:
-#         # Step 1: Handle session management
-#         if request.session_id:
-#             chat_session = session.query(ChatSession).filter(
-#                 ChatSession.session_id == request.session_id,
-#                 ChatSession.user_id == current_user.id,
-#             ).first()
-#             if not chat_session:
-#                 raise HTTPException(
-#                     status_code=status.HTTP_404_NOT_FOUND,
-#                     detail="Chat session not found"
-#                 )
-#             session_id = request.session_id
-#         else:
-#             session_id = f"{current_user.id}-{uuid.uuid4().hex}"
-#             chat_session = ChatSession(
-#                 session_id=session_id,
-#                 user_id=current_user.id,
-#             )
-#             session.add(chat_session)
-#             session.commit()
+@router.post("/agent-chat")
+async def agent_chat(
+    request: ChatRequest,
+    session: Session = Depends(get_session),
+    current_user: GenZenUser = Depends(get_current_user),
+):
+    """
+    Handles user queries using the langgraph agent.
+    """
+    try:
+        # Step 1: Handle session management
+        if request.session_id:
+            chat_session = session.query(ChatSession).filter(
+                ChatSession.session_id == request.session_id,
+                ChatSession.user_id == current_user.id,
+            ).first()
+            if not chat_session:
+                raise HTTPException(
+                    status_code=status.HTTP_404_NOT_FOUND,
+                    detail="Chat session not found"
+                )
+            session_id = request.session_id
+        else:
+            session_id = f"{current_user.id}-{uuid.uuid4().hex}"
+            chat_session = ChatSession(
+                session_id=session_id,
+                user_id=current_user.id,
+            )
+            session.add(chat_session)
+            session.commit()
 
-#         # Step 2: Format the message for the agent
-#         # The agent expects a list of messages
-#         messages = [HumanMessage(content=request.query)]
+        # Step 2: Format the message for the agent
+        # The agent expects a list of messages
+        messages = [HumanMessage(content=request.query)]
 
-#         # Step 3: Invoke the agent
-#         agent_response = graph.invoke({
-#             "messages": messages
-#         })
+        # Step 2.1: Configure thread_id and user_id for memory
+        config = {
+            "configurable": {
+                "thread_id": session_id,  # For short-term memory (checkpointer)
+                "user_id": str(current_user.id),  # For long-term memory (store)
+                "checkpoint_ns": "genzen"  # Optional namespace for checkpoints
+            }
+        }
+
+        # Step 3: Invoke the agent
+        agent_response = graph.invoke({"messages": messages}, config)
         
-#         # Extract the response from the agent's output
-#         assistant_msg_txt = agent_response["messages"][-1].content
+        # Extract the response from the agent's output
+        assistant_msg_txt = agent_response["messages"][-1].content
 
-#         # Step 4: Log the interaction
-#         user_message = ChatHistory(
-#             session_id=session_id,
-#             user_id=current_user.id,
-#             role="user",
-#             message=request.query,
-#         )
+        # Step 4: Log the interaction
+        user_message = ChatHistory(
+            session_id=session_id,
+            user_id=current_user.id,
+            role="user",
+            message=request.query,
+        )
         
-#         assistant_message = ChatHistory(
-#             session_id=session_id,
-#             user_id=current_user.id,
-#             role="assistant",
-#             message=assistant_msg_txt,
-#         )
+        assistant_message = ChatHistory(
+            session_id=session_id,
+            user_id=current_user.id,
+            role="assistant",
+            message=assistant_msg_txt,
+        )
         
-#         session.add_all([user_message, assistant_message])
-#         session.commit()
+        session.add_all([user_message, assistant_message])
+        session.commit()
 
-#         return {
-#             "session_id": session_id,
-#             "query": request.query,
-#             "response": assistant_msg_txt,
-#         }
+        return {
+            "session_id": session_id,
+            "query": request.query,
+            "response": assistant_msg_txt,
+        }
 
-#     except Exception as e:
-#         raise HTTPException(
-#             status_code=500,
-#             detail=f"Error in agent chat: {str(e)}"
-#         )
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Error in agent chat: {str(e)}"
+        )
 
 @router.post("/chat")
 async def chat(

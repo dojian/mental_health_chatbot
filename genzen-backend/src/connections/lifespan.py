@@ -6,7 +6,7 @@ from datetime import datetime
 from contextlib import asynccontextmanager
 
 from src.connections.redis_cache import init_redis, close_redis_client
-from src.connections.db import create_db_and_tables
+from src.connections.db import create_db_and_tables, setup_checkpoint_and_memory_store
 from src.connections.llm_client import get_llm_client
 
 @asynccontextmanager
@@ -28,6 +28,7 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     ### Postgres ###
     # conn = get_connection()
     create_db_and_tables()
+    setup_checkpoint_and_memory_store()
     logging.info(f"{datetime.now()}: LIFESPAN - Connected to Postgres")
     yield
 

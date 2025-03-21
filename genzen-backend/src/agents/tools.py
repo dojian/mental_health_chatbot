@@ -55,3 +55,21 @@ The counselor must return **only** a Structured JSON Response with these fields:
     structured_response = response_text.split("### Counselor Structured JSON Response:")[1].strip()
 
     return structured_response
+
+def remember_information(information: str, key: str = None) -> str:
+    """
+    Store important information about the user for future reference.
+    Args:
+        information (str): The information to store.
+        key (str, optional): The key to store the information under. Defaults to None.
+    """
+    return f" I'll remember that {information}"
+
+def recall_information(topic: str) -> str:
+    """
+    Recall information previously stored about the user.
+    Args:
+        topic (str): The topic to recall information about.
+    """
+    return f"Searching for information about {topic}..."
+        

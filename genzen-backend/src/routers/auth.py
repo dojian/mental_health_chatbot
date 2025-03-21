@@ -1,9 +1,7 @@
 from fastapi import APIRouter, HTTPException, Depends, status
 from fastapi.security import OAuth2PasswordRequestForm, OAuth2PasswordBearer
 # from datetime import timedelta, datetime
-import jwt
-import uuid
-import os
+import jwt, uuid, os
 
 from src.models.schemas import Token, CreateGenZenUser
 from src.models.models import GenZenUser
@@ -20,6 +18,7 @@ load_dotenv()
 JWT_SECRET = os.getenv("JWT_SECRET")
 ALGORITHM = os.getenv("ALGORITHM")
 ACCESS_TOKEN_EXPIRE_MINUTES = int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES"))
+REDIS_SESSION_PREFIX = os.getenv("REDIS_SESSION_PREFIX")
 
 router = APIRouter()
 
@@ -51,7 +50,8 @@ async def register_user(user_create: CreateGenZenUser, redis = Depends(get_redis
 
     # Create session in Redis and issue access token
     session_id = uuid.uuid4().hex
-    await redis.set(f"session:{session_id}", new_user.username, ex=ACCESS_TOKEN_EXPIRE_MINUTES)
+    session_key = f"{REDIS_SESSION_PREFIX}{session_id}"
+    await redis.set(session_key, new_user.username, ex=ACCESS_TOKEN_EXPIRE_MINUTES * 60)
     access_token = create_access_token(
         data={"sub": new_user.username, "session_id": session_id}
     )
@@ -59,7 +59,11 @@ async def register_user(user_create: CreateGenZenUser, redis = Depends(get_redis
 
 
 @router.post("/login", response_model=Token)
-async def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends(), redis = Depends(get_redis_client), session = Depends(get_session)):
+async def login_for_access_token(
+    form_data: OAuth2PasswordRequestForm = Depends(), 
+    redis = Depends(get_redis_client), 
+    session = Depends(get_session)
+    ):
     """
     OAuth2 compatible token login, get an access token for future requests
     """
@@ -69,8 +73,12 @@ async def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Incorrect username or password",
         )
+    
+    # Create session in Redis and issue access token
     session_id = uuid.uuid4().hex
-    await redis.set(f"session:{session_id}", user.username, ex=ACCESS_TOKEN_EXPIRE_MINUTES)
+    session_key = f"{REDIS_SESSION_PREFIX}{session_id}"
+    await redis.set(session_key, user.username, ex=ACCESS_TOKEN_EXPIRE_MINUTES * 60)
+
     access_token = create_access_token(
         data={"sub": user.username, "session_id": session_id}
     )
@@ -93,5 +101,6 @@ async def logout(token: str = Depends(oauth2_scheme), redis = Depends(get_redis_
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Could not validate credentials",
         )
-    await redis.delete(f"session:{session_id}")
+    session_key = f"{REDIS_SESSION_PREFIX}{session_id}"
+    await redis.delete(session_key)
     return {"message": "Successfully logged out"}

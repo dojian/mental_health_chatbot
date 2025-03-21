@@ -11,7 +11,8 @@ from src.connections.redis_cache import get_redis_client
 
 JWT_SECRET = os.getenv("JWT_SECRET")
 ALGORITHM = os.getenv("ALGORITHM", "HS256")
-ACCESS_TOKEN_EXPIRE_MINUTES = int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", 10))
+ACCESS_TOKEN_EXPIRE_MINUTES = int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", 30))
+REDIS_SESSION_PREFIX = os.getenv("REDIS_SESSION_PREFIX")
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="auth/login")
@@ -63,11 +64,17 @@ async def get_current_user(
         payload = jwt.decode(token, JWT_SECRET, algorithms=[ALGORITHM])
         username: str = payload.get("sub")
         session_id: str = payload.get("session_id")
+
         if username is None or session_id is None:
             raise credentials_exception
         
         # Check if session exists in Redis
-        stored_username = await redis.get(f"session:{session_id}")
+        stored_username = await redis.get(f"user_session:{session_id}")
+        print('-------------------------------')
+        print('-------------------------------')
+        print(f"Stored username: {stored_username}")
+        print('-------------------------------')
+        print('-------------------------------')
         if not stored_username or stored_username.decode() != username:
             raise credentials_exception
 
@@ -78,3 +85,52 @@ async def get_current_user(
     if user is None:
         raise credentials_exception
     return user
+
+# async def get_current_user(
+#     token: str = Depends(oauth2_scheme), 
+#     redis = Depends(get_redis_client),
+#     session = Depends(get_session)
+# ):
+#     credentials_exception = HTTPException(
+#         status_code=status.HTTP_401_UNAUTHORIZED,
+#         detail="Could not validate credentials",
+#         headers={"WWW-Authenticate": "Bearer"},
+#     )
+#     try:
+#         # Decode JWT token
+#         payload = jwt.decode(token, JWT_SECRET, algorithms=[ALGORITHM])
+#         username = payload.get("sub")
+#         session_id = payload.get("session_id")
+        
+#         if username is None or session_id is None:
+#             raise credentials_exception
+
+#         # Verify session exists in Redis with explicit key
+#         session_key = f"{REDIS_SESSION_PREFIX}{session_id}"
+#         stored_username = await redis.get(session_key)
+        
+#         if not stored_username:
+#             print(f"Session not found in Redis: {session_key}")  # Debug
+#             raise credentials_exception
+            
+#         if stored_username.decode() != username:
+#             print(f"Username mismatch: {stored_username.decode()} != {username}")  # Debug
+#             raise credentials_exception
+
+#         # Get user from database
+#         user = get_user(username, session)
+#         if user is None:
+#             print(f"User not found in database: {username}")  # Debug
+#             raise credentials_exception
+            
+#         # Refresh session TTL
+#         await redis.expire(session_key, ACCESS_TOKEN_EXPIRE_MINUTES * 60)
+            
+#         return user
+
+#     except jwt.PyJWTError as e:
+#         print(f"JWT Error: {str(e)}")  # Debug
+#         raise credentials_exception
+#     except Exception as e:
+#         print(f"Unexpected error: {str(e)}")  # Debug
+#         raise credentials_exception

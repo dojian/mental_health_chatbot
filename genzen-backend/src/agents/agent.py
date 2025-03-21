@@ -17,7 +17,7 @@ llm = ChatOpenAI(model="gpt-4o-mini")
 llm_with_tools = llm.bind_tools(tools)
 
 # System message
-sys_msg = SystemMessage(content="You are a helpful student assistant tasked with managing calendar and mental health counseling.")
+sys_msg = SystemMessage(content="You are a helpful student assistant tasked with mental health counseling. When counseling, make sure to use the **answer** directly from the mental_health tool output")
 
 # Node
 def assistant(state: MessagesState):

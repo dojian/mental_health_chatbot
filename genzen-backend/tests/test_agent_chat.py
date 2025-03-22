@@ -5,7 +5,10 @@ from httpx import ASGITransport, AsyncClient
 
 from src.main import app
 from src.connections.redis_cache import init_redis
-
+# from src.connections.db import memory_store
+# from src.utils.auth_utils import get_user
+# from src.connections.db import get_session
+# from pprint import pprint
 
 @pytest.fixture(scope="module")
 def event_loop():
@@ -75,7 +78,48 @@ async def test_agent_chat(auth_client):
     assert "Lit" in answer
 
 
+@pytest.mark.asyncio
+async def test_agent_chat_with_memory(auth_client):
+    """
+    Test the agent chat with memory.
+    """
+    client, token = auth_client
 
+    query1 = "Hello, my name is Lit and I am a Data Scientist."
+    # First interaction
+    response1 = await client.post(
+        "/v1/agent-chat",
+        json = {
+            "query": query1
+        },
+        headers = {
+            "Authorization": f"Bearer {token}"
+        }
+    )
 
-    # response = client.post("/agent/chat", json={"query": "Hello, how are you?"}, headers={"Authorization": f"Bearer {token}"})
-    # assert response.status_code == 200
+    session_id = response1.json()["session_id"]
+
+    assert response1.status_code == 200
+    assert "Lit" in response1.json()["response"]
+
+    # TODO:Verify memory was stored
+
+    # Second interaction
+    query2 = "What's my name and what do I do?"
+
+    response2 = await client.post(
+        "/v1/agent-chat",
+        json = {
+            "query": query2,
+            "session_id": session_id
+        },
+        headers = {
+            "Authorization": f"Bearer {token}"
+        }
+    )
+    assert response2.status_code == 200
+    assert "Lit" in response2.json()["response"]
+    assert "Data Scientist" in response2.json()["response"]
+
+    # TODO: Verify memory was stored
+    # TODO: Delete memory

@@ -28,10 +28,6 @@ settings = Settings()
 SQLALCHEMY_DB_URI = f"postgresql://{settings.POSTGRES_USER}:{settings.POSTGRES_PASSWORD}@{settings.POSTGRES_HOST}:{settings.POSTGRES_PORT}/{settings.POSTGRES_DB}?sslmode=disable"
 POSTGRES_CONN_STRING = SQLALCHEMY_DB_URI
 
-print("--------------------------------")
-print(SQLALCHEMY_DB_URI)
-print("--------------------------------")
-
 engine = create_engine(
     SQLALCHEMY_DB_URI,
     echo=True
@@ -49,11 +45,6 @@ pool = ConnectionPool(
 )
 checkpointer = PostgresSaver(pool)
 memory_store = PostgresStore(pool)
-
-# checkpointer = PostgresSaver.from_conn_string(POSTGRES_CONN_STRING)
-
-# Initialize memory store for long-term memory (across sessions)
-# memory_store = PostgresStore.from_conn_string(POSTGRES_CONN_STRING)
 
 def get_connection():
     """

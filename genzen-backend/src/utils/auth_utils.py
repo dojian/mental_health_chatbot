@@ -70,11 +70,6 @@ async def get_current_user(
         
         # Check if session exists in Redis
         stored_username = await redis.get(f"user_session:{session_id}")
-        print('-------------------------------')
-        print('-------------------------------')
-        print(f"Stored username: {stored_username}")
-        print('-------------------------------')
-        print('-------------------------------')
         if not stored_username or stored_username.decode() != username:
             raise credentials_exception
 

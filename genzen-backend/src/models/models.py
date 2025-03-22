@@ -21,6 +21,7 @@ class GenZenUser(SQLModel, table=True):
 class ChatSession(SQLModel, table=True):
     id: int | None = Field(default=None, primary_key=True)
     session_id: str = Field(unique=True, index=True)
+    session_name: str | None = Field(default=None)
     user_id: int = Field(foreign_key="genzenuser.id")
     created_at: datetime.datetime = Field(default_factory=lambda: datetime.datetime.now(datetime.timezone.utc))
 

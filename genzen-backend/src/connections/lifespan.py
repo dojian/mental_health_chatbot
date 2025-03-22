@@ -26,7 +26,6 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     logging.info(f"{datetime.now()}: LIFESPAN - Connected to OpenAI - gpt-4o-mini")
     
     ### Postgres ###
-    # conn = get_connection()
     create_db_and_tables()
     setup_checkpoint_and_memory_store()
     logging.info(f"{datetime.now()}: LIFESPAN - Connected to Postgres")

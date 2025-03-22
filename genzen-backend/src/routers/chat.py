@@ -3,7 +3,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlmodel import Session
 
 from langchain_openai import ChatOpenAI
-from langchain_core.messages import HumanMessage
+from langchain_core.messages import HumanMessage, AIMessage
 
 from src.models.models import GenZenUser, ChatHistory, ChatSession
 from src.models.schemas import ChatRequest
@@ -69,22 +69,32 @@ async def agent_chat(
         else:
             session_id = f"{current_user.id}-{uuid.uuid4().hex}"
             chat_session = ChatSession(
-                session_id=session_id,
                 user_id=current_user.id,
+                session_id=session_id,
+                session_name=request.session_name
             )
             session.add(chat_session)
             session.commit()
+        
+        # Retrieve existing chat history
+        existing_messages = session.query(ChatHistory).filter(
+            ChatHistory.session_id == session_id).order_by(
+                ChatHistory.timestamp).all()
 
         # Step 2: Format the message for the agent
         # The agent expects a list of messages
-        messages = [HumanMessage(content=request.query)]
+        messages = [
+            HumanMessage(content=msg.message) if msg.role == "user" else AIMessage(content=msg.message)
+            for msg in existing_messages
+        ]
+        messages.append(HumanMessage(content=request.query))  
 
         # Step 2.1: Configure thread_id and user_id for memory
         config = {
             "configurable": {
                 "thread_id": session_id,  # For short-term memory (checkpointer)
                 "user_id": str(current_user.id),  # For long-term memory (store)
-                "checkpoint_ns": "genzen"  # Optional namespace for checkpoints
+                "checkpoint_ns": f"user_{current_user.id}"  # Optional namespace for checkpoints
             }
         }
 
@@ -127,7 +137,7 @@ async def agent_chat(
 @router.post("/chat")
 async def chat(
     request: ChatRequest,
-    session: Session = Depends(get_session),
+    session: ChatSession = Depends(get_session),
     current_user: GenZenUser = Depends(get_current_user),
 ):
     """

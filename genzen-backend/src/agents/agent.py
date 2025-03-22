@@ -6,16 +6,13 @@ from langgraph.prebuilt import tools_condition, ToolNode
 import os, uuid
 from datetime import datetime
 
-from src.connections.db import SQLALCHEMY_DB_URI, checkpointer, memory_store
+from src.connections.db import checkpointer, memory_store
 from dotenv import load_dotenv
 load_dotenv()
 
 from src.agents.tools import mental_health, remember_information, recall_information
 
-# import os
-# OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 model_name = os.getenv("OPENAI_MODEL_NAME")
-POSTGRES_CONN_STRING = SQLALCHEMY_DB_URI
 # Tool
 tools = [mental_health, remember_information, recall_information]
 
@@ -42,13 +39,35 @@ def assistant(state: MessagesState):
 
     # Get user_id from config if available
     user_id = state.get("configurable", {}).get("user_id", "default_user")
+    
+    trigger_facts = ["my name is", "i am", "i'm studying"]
+
+    try:
+        if any(trigger in user_text.lower() for trigger in trigger_facts):
+            memory_id = uuid.uuid4().hex
+            memory_store.put(
+                f"user:{user_id}:facts",
+                memory_id,
+                {
+                    "content": user_text,
+                    "timestamp": str(datetime.now())
+                }
+            )
+    except Exception as e:
+        print(f"Error storing memory: {e}")
 
     # Retrieve relevant memories if available
     memories = []
     try:
+        # Try to retrieve from personal facts
+        fact_results = memory_store.search(f"user:{user_id}:facts", user_text, limit=4)
+        if fact_results:
+            memories.extend([f"I remember that {fact['content']}" for fact in fact_results])
+
+        # Try to retrieve conversation history
         memory_results = memory_store.search(f"user:{user_id}", user_text, limit=4)
         if memory_results:
-            memories = [f"Previous memory: {mem['content']}" for mem in memory_results]
+            memories.extend([f"Previous memory: {mem['content']}" for mem in memory_results])
     except Exception as e:
         print(f"Error retrieving memories: {e}")
     
@@ -68,7 +87,7 @@ def assistant(state: MessagesState):
             # Store this interaction for future reference
             memory_id = uuid.uuid4().hex
             memory_store.put(
-                f"user:{user_id}", 
+                f"user:{user_id}",
                 memory_id,
                 {
                     "content": user_text,

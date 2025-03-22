@@ -123,3 +123,11 @@ Returns a list of all chat sessions for the current user.
     "first_query": "What is the capital of France?"
   }
 ]
+
+Docker exec into postgres db commands
+```
+docker exec -it <container_name> sh
+psql -U <db username> -d <database name> # info found in either .env or docker command to run it
+
+\dt # list tables
+```

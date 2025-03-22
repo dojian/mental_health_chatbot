@@ -1,18 +1,25 @@
 import os
 import psycopg2
 from dotenv import load_dotenv
+from sqlmodel import SQLModel
+from src.connections.db import engine
 load_dotenv()
 
-def reset_database():
+def delete_database():
     """
     Reset the database.
     """
     commands_drop = [
-        # "DROP TABLE IF EXISTS genzenuser CASCADE",
-        "DROP TABLE IF EXISTS session CASCADE",
         "DROP TABLE IF EXISTS chathistory CASCADE",
         "DROP TABLE IF EXISTS chatsession CASCADE",
-
+        "DROP TABLE IF EXISTS checkpoint_blobs CASCADE",
+        "DROP TABLE IF EXISTS checkpoint_migrations CASCADE",
+        "DROP TABLE IF EXISTS checkpoint_writes CASCADE",
+        "DROP TABLE IF EXISTS checkpoints CASCADE",
+        "DROP TABLE IF EXISTS genzenuser CASCADE",
+        "DROP TABLE IF EXISTS store CASCADE",
+        "DROP TABLE IF EXISTS store_migrations CASCADE",
+        "DROP TABLE IF EXISTS survey CASCADE",
     ]
 
     conn = psycopg2.connect(
@@ -35,4 +42,4 @@ def reset_database():
         conn.close()
 
 if __name__ == "__main__":
-    reset_database()
+    delete_database()

@@ -60,12 +60,22 @@ def assistant(state: MessagesState):
     memories = []
     try:
         # Try to retrieve from personal facts
-        fact_results = memory_store.search(f"user:{user_id}:facts", user_text, limit=4)
+        try:
+            fact_results = memory_store.search(f"user:{user_id}:facts")
+        except Exception as e:
+            print(f"Error retrieving facts: {e}")
+            fact_results = []
+        # fact_results = memory_store.search(f"user:{user_id}:facts", user_text, limit=4)
         if fact_results:
             memories.extend([f"I remember that {fact['content']}" for fact in fact_results])
 
         # Try to retrieve conversation history
-        memory_results = memory_store.search(f"user:{user_id}", user_text, limit=4)
+        try:
+            memory_results = memory_store.search(f"user:{user_id}")
+        except Exception as e:
+            print(f"Error retrieving memories: {e}")
+            memory_results = []
+        # memory_results = memory_store.search(f"user:{user_id}", user_text, limit=4)
         if memory_results:
             memories.extend([f"Previous memory: {mem['content']}" for mem in memory_results])
     except Exception as e:

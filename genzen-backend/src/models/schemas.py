@@ -1,5 +1,7 @@
 from pydantic import BaseModel
 from pydantic import EmailStr
+from typing import Optional
+
 
 class Token(BaseModel):
     access_token: str
@@ -13,4 +15,5 @@ class CreateGenZenUser(BaseModel):
 
 class ChatRequest(BaseModel):
     query: str
-    session_id: str | None = None  # Optional field for existing sessions
+    session_id: Optional[str] = None    # Optional field for existing sessions
+    session_name: Optional[str] = None  # Optional allow users to name their sessions

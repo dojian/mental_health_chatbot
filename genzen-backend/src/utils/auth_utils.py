@@ -11,7 +11,8 @@ from src.connections.redis_cache import get_redis_client
 
 JWT_SECRET = os.getenv("JWT_SECRET")
 ALGORITHM = os.getenv("ALGORITHM", "HS256")
-ACCESS_TOKEN_EXPIRE_MINUTES = int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", 10))
+ACCESS_TOKEN_EXPIRE_MINUTES = int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", 30))
+REDIS_SESSION_PREFIX = os.getenv("REDIS_SESSION_PREFIX")
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="auth/login")
@@ -63,11 +64,12 @@ async def get_current_user(
         payload = jwt.decode(token, JWT_SECRET, algorithms=[ALGORITHM])
         username: str = payload.get("sub")
         session_id: str = payload.get("session_id")
+
         if username is None or session_id is None:
             raise credentials_exception
         
         # Check if session exists in Redis
-        stored_username = await redis.get(f"session:{session_id}")
+        stored_username = await redis.get(f"user_session:{session_id}")
         if not stored_username or stored_username.decode() != username:
             raise credentials_exception
 

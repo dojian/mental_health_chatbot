@@ -81,8 +81,8 @@ def assistant(state: MessagesState):
     # Call LLM with tool support
     response = llm_with_tools.invoke([context_system_message] + state["messages"])
 
-    # EDIT: Store important insights from this conversation
-    if user_text and len(user_text) > 20:  # Only store substantial messages
+    # Store important insights from this conversation
+    if user_text and len(user_text) > 5:  # Only store substantial messages
         try:
             # Store this interaction for future reference
             memory_id = uuid.uuid4().hex

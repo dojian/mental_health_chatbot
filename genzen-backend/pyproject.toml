@@ -28,7 +28,6 @@ dependencies = [
     "langgraph-cli (>=0.1.77,<0.2.0)",
     "langchain (>=0.3.21,<0.4.0)",
     "pgvector (>=0.3.0,<0.4.0)",
-    "psycopg2 (>=2.9.10,<3.0.0)",
     "sqlalchemy (>=2.0.39,<3.0.0)",
     "qdrant-client (>=1.13.3,<2.0.0)",
     "cohere (>=5.14.0,<6.0.0)",
@@ -46,3 +45,13 @@ dependencies = [
 [build-system]
 requires = ["poetry-core>=2.0.0,<3.0.0"]
 build-backend = "poetry.core.masonry.api"
+
+[tool.poetry.group.dev.dependencies]
+pytest = "^8.3.5"
+pytest-asyncio = "^0.25.3"
+
+[tool.pytest.ini_options]
+asyncio_mode = "strict"
+asyncio_default_fixture_loop_scope = "function"
+addopts = "-s"
+

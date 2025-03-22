@@ -5,11 +5,13 @@ from sqlmodel import Session
 # from langchain_openai import ChatOpenAI
 from langchain_core.messages import HumanMessage, AIMessage
 
-from src.models.models import GenZenUser, ChatHistory, ChatSession
+from src.models.models import GenZenUser, ChatHistory, ChatSession, SurveyData
 from src.models.schemas import ChatRequest
 from src.connections.db import get_session
 from src.utils.auth_utils import get_current_user
 from src.agents.agent import graph, llm, llm_with_tools
+
+from src.models.schemas import PreChatSurveyCreate, PostChatSurveyCreate
 
 router = APIRouter()
 
@@ -201,6 +203,7 @@ async def chat(
         user_id=current_user.id,
         role="user",
         message=request.query,
+        metadata=request.metadata.model_dump()
     )
     
     assistant_message = ChatHistory(
@@ -219,3 +222,34 @@ async def chat(
         "query": request.query,
         "response": assistant_msg_txt,
     }
+
+@router.post("/pre-chat-survey")
+async def submit_pre_chat_survey(
+    survey: PreChatSurveyCreate,
+    session: Session = Depends(get_session),
+    current_user: GenZenUser = Depends(get_current_user),
+):
+    survey_data = SurveyData(        user_id = current_user.id,
+        session_id = survey.session_id,
+        survey_type = "pre",
+        data = survey.model_dump()
+    )
+    session.add(survey_data)
+    session.commit()
+    return {"message": "Pre-chat survey submitted successfully"} 
+
+@router.post("/post-chat-survey")
+async def submit_post_chat_survey(
+    survey: PostChatSurveyCreate,
+    session: Session = Depends(get_session),
+    current_user: GenZenUser = Depends(get_current_user),
+):
+    survey_data = SurveyData(
+        user_id = current_user.id,
+        session_id = survey.session_id,
+        survey_type = "post",
+        data = survey.model_dump()
+    )
+    session.add(survey_data)
+    session.commit()
+    return {"message": "Post-chat survey submitted successfully"} 

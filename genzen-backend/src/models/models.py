@@ -5,6 +5,10 @@ from datetime import datetime, timezone, UTC
 import datetime
 from pydantic import EmailStr
 from sqlalchemy import String
+from uuid import UUID, uuid4
+from sqlalchemy.dialects.postgresql import JSONB
+from sqlalchemy import Column
+
 
 class GenZenUser(SQLModel, table=True):
     id: int | None = Field(default=None, primary_key=True)
@@ -33,3 +37,12 @@ class ChatHistory(SQLModel, table=True):
     role: str = Field(index=True) # user or assistant
     message: str
     timestamp: datetime.datetime = Field(default_factory=lambda: datetime.datetime.now(datetime.timezone.utc))
+
+class SurveyData(SQLModel, table=True):
+    __tablename__ = "survey"
+    id: UUID = Field(default_factory=uuid4, primary_key=True)
+    user_id: int = Field(foreign_key="genzenuser.id")
+    session_id: str = Field(foreign_key="chatsession.session_id")
+    survey_type: str = Field(max_length=20) # pre or post
+    data: dict = Field(sa_column=Column(JSONB))
+    created_at: datetime.datetime = Field(default_factory=lambda: datetime.datetime.now(datetime.timezone.utc))

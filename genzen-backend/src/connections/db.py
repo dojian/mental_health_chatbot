@@ -41,7 +41,8 @@ connection_kwargs = {
 pool = ConnectionPool(
     conninfo=POSTGRES_CONN_STRING,
     max_size=20,
-    kwargs=connection_kwargs
+    kwargs=connection_kwargs,
+    open=True
 )
 checkpointer = PostgresSaver(pool)
 memory_store = PostgresStore(pool)

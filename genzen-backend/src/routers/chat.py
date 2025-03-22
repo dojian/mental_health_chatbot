@@ -2,7 +2,7 @@ import uuid
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlmodel import Session
 
-from langchain_openai import ChatOpenAI
+# from langchain_openai import ChatOpenAI
 from langchain_core.messages import HumanMessage, AIMessage
 
 from src.models.models import GenZenUser, ChatHistory, ChatSession

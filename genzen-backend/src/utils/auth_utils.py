@@ -1,5 +1,5 @@
 from src.models.models import GenZenUser
-from datetime import timedelta, datetime
+from datetime import timedelta, datetime, UTC
 from sqlalchemy.orm import Session
 import os
 import jwt
@@ -41,7 +41,7 @@ def create_access_token(data: dict, expires_delta: timedelta | None = None) -> s
     Create an access token.
     """
     to_encode = data.copy()
-    expire = datetime.utcnow() + (expires_delta if expires_delta else timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES))
+    expire = datetime.now(UTC) + (expires_delta if expires_delta else timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES))
     to_encode.update({"exp": int(expire.timestamp())})
     return jwt.encode(to_encode, JWT_SECRET, algorithm=ALGORITHM)
     

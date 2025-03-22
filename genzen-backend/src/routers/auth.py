@@ -1,12 +1,10 @@
 from fastapi import APIRouter, HTTPException, Depends, status
 from fastapi.security import OAuth2PasswordRequestForm, OAuth2PasswordBearer
-# from datetime import timedelta, datetime
 import jwt, uuid, os
 
 from src.models.schemas import Token, CreateGenZenUser
 from src.models.models import GenZenUser
 
-# from passlib.context import CryptContext
 from src.connections.db import get_session
 from src.connections.redis_cache import get_redis_client
 

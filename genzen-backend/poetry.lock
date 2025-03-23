@@ -333,18 +333,18 @@ typecheck = ["mypy"]
 
 [[package]]
 name = "boto3"
-version = "1.37.17"
+version = "1.37.18"
 description = "The AWS SDK for Python"
 optional = false
 python-versions = ">=3.8"
 groups = ["main"]
 files = [
-    {file = "boto3-1.37.17-py3-none-any.whl", hash = "sha256:3e7c2056b0e7950818c4b8695ac0da3a7933cf9f4f45d67f8804ce37fdef8a7b"},
-    {file = "boto3-1.37.17.tar.gz", hash = "sha256:f4ae383aca1799061d83c0097e9ccd7b494a71b36d72226628ad0fde1b95b7c9"},
+    {file = "boto3-1.37.18-py3-none-any.whl", hash = "sha256:1545c943f36db41853cdfdb6ff09c4eda9220dd95bd2fae76fc73091603525d1"},
+    {file = "boto3-1.37.18.tar.gz", hash = "sha256:9b272268794172b0b8bb9fb1f3c470c3b6c0ffb92fbd4882465cc740e40fbdcd"},
 ]
 
 [package.dependencies]
-botocore = ">=1.37.17,<1.38.0"
+botocore = ">=1.37.18,<1.38.0"
 jmespath = ">=0.7.1,<2.0.0"
 s3transfer = ">=0.11.0,<0.12.0"
 
@@ -353,14 +353,14 @@ crt = ["botocore[crt] (>=1.21.0,<2.0a0)"]
 
 [[package]]
 name = "botocore"
-version = "1.37.17"
+version = "1.37.18"
 description = "Low-level, data-driven core of boto 3."
 optional = false
 python-versions = ">=3.8"
 groups = ["main"]
 files = [
-    {file = "botocore-1.37.17-py3-none-any.whl", hash = "sha256:f8c93eec385a346c7a59efcb15d8cf3613cd9d6ab27f32492eed9549bd86d69e"},
-    {file = "botocore-1.37.17.tar.gz", hash = "sha256:c879c2a5dc6952b81591d0e765c7b93e90df7f6c50b3d9b68011ec7cfe7fe48d"},
+    {file = "botocore-1.37.18-py3-none-any.whl", hash = "sha256:a8b97d217d82b3c4f6bcc906e264df7ebb51e2c6a62b3548a97cd173fb8759a1"},
+    {file = "botocore-1.37.18.tar.gz", hash = "sha256:99e8eefd5df6347ead15df07ce55f4e62a51ea7b54de1127522a08597923b726"},
 ]
 
 [package.dependencies]
@@ -390,6 +390,7 @@ description = "Foreign Function Interface for Python calling C code."
 optional = false
 python-versions = ">=3.8"
 groups = ["main"]
+markers = "platform_python_implementation == \"PyPy\""
 files = [
     {file = "cffi-1.17.1-cp310-cp310-macosx_10_9_x86_64.whl", hash = "sha256:df8b1c11f177bc2313ec4b2d46baec87a5f3e71fc8b45dab2ee7cae86d9aba14"},
     {file = "cffi-1.17.1-cp310-cp310-macosx_11_0_arm64.whl", hash = "sha256:8f2cdc858323644ab277e9bb925ad72ae0e67f69e804f4898c070998d50b1a67"},
@@ -1845,32 +1846,32 @@ langgraph-checkpoint = ">=2.0.15,<3.0.0"
 
 [[package]]
 name = "langgraph-cli"
-version = "0.1.77"
+version = "0.1.79"
 description = "CLI for interacting with LangGraph API"
 optional = false
 python-versions = "<4.0.0,>=3.9.0"
 groups = ["main"]
 files = [
-    {file = "langgraph_cli-0.1.77-py3-none-any.whl", hash = "sha256:5a4ccebba8e0e0a3528c5a80988bba3e2b1857f3c1bb58082cfcb082c7ba03ae"},
-    {file = "langgraph_cli-0.1.77.tar.gz", hash = "sha256:c0aee7d20245c1c401eb159fee82a20a557d7cdcce25c5de5fa53db877be1b79"},
+    {file = "langgraph_cli-0.1.79-py3-none-any.whl", hash = "sha256:a3ba9c96d84dff30ab34a55b0599af859b229c7e0be68ff1b48a14aa354c881a"},
+    {file = "langgraph_cli-0.1.79.tar.gz", hash = "sha256:1e7cc1ea7a15ca3b6bb8d64e815550dd568be1f192611826fe0cd1e8ebd8d31a"},
 ]
 
 [package.dependencies]
 click = ">=8.1.7,<9.0.0"
 
 [package.extras]
-inmem = ["langgraph-api (>=0.0.27,<0.1.0) ; python_version >= \"3.11\" and python_version < \"4.0\"", "python-dotenv (>=0.8.0)"]
+inmem = ["langgraph-api (>=0.0.32,<0.1.0) ; python_version >= \"3.11\" and python_version < \"4.0\"", "python-dotenv (>=0.8.0)"]
 
 [[package]]
 name = "langgraph-prebuilt"
-version = "0.1.3"
+version = "0.1.4"
 description = "Library with high-level APIs for creating and executing LangGraph agents and tools."
 optional = false
 python-versions = "<4.0.0,>=3.9.0"
 groups = ["main"]
 files = [
-    {file = "langgraph_prebuilt-0.1.3-py3-none-any.whl", hash = "sha256:4bb8a6b9c9c7f8eee9c6b151e8b379fad02f60679fed9554cfeb4382c4b9f858"},
-    {file = "langgraph_prebuilt-0.1.3.tar.gz", hash = "sha256:9a9be529cd4419b9ec16b4bc80f6b260d5a680b0705f1a58eb09e78962dc2d71"},
+    {file = "langgraph_prebuilt-0.1.4-py3-none-any.whl", hash = "sha256:23110997d2747cfb7ca2649ca78c6fc950a6646a5c96b7e9d8b7d19221f896a1"},
+    {file = "langgraph_prebuilt-0.1.4.tar.gz", hash = "sha256:61a5543c6d1be3d54bf53147763b4510d6ab2989347a16d1e9c366ef4dbcf0d8"},
 ]
 
 [package.dependencies]
@@ -2475,14 +2476,14 @@ sympy = "*"
 
 [[package]]
 name = "openai"
-version = "1.68.0"
+version = "1.68.2"
 description = "The official Python library for the openai API"
 optional = false
 python-versions = ">=3.8"
 groups = ["main"]
 files = [
-    {file = "openai-1.68.0-py3-none-any.whl", hash = "sha256:20e279b0f3a78cb4a95f3eab2a180f3ee30c6a196aeebd6bf642a4f88ab85ee1"},
-    {file = "openai-1.68.0.tar.gz", hash = "sha256:c570c06c9ba10f98b891ac30a3dd7b5c89ed48094c711c7a3f35fb5ade6c0757"},
+    {file = "openai-1.68.2-py3-none-any.whl", hash = "sha256:24484cb5c9a33b58576fdc5acf0e5f92603024a4e39d0b99793dfa1eb14c2b36"},
+    {file = "openai-1.68.2.tar.gz", hash = "sha256:b720f0a95a1dbe1429c0d9bb62096a0d98057bcda82516f6e8af10284bdd5b19"},
 ]
 
 [package.dependencies]
@@ -2490,16 +2491,15 @@ anyio = ">=3.5.0,<5"
 distro = ">=1.7.0,<2"
 httpx = ">=0.23.0,<1"
 jiter = ">=0.4.0,<1"
-numpy = ">=2.0.2"
 pydantic = ">=1.9.0,<3"
 sniffio = "*"
-sounddevice = ">=0.5.1"
 tqdm = ">4"
 typing-extensions = ">=4.11,<5"
 
 [package.extras]
 datalib = ["numpy (>=1)", "pandas (>=1.2.3)", "pandas-stubs (>=1.1.0.11)"]
 realtime = ["websockets (>=13,<15)"]
+voice-helpers = ["numpy (>=2.0.2)", "sounddevice (>=0.5.1)"]
 
 [[package]]
 name = "orjson"
@@ -3262,6 +3262,7 @@ description = "C parser in Python"
 optional = false
 python-versions = ">=3.8"
 groups = ["main"]
+markers = "platform_python_implementation == \"PyPy\""
 files = [
     {file = "pycparser-2.22-py3-none-any.whl", hash = "sha256:c3702b6d3dd8c7abc1afa565d7e63d53a1d0bd86cdc24edd75470f4de499cfcc"},
     {file = "pycparser-2.22.tar.gz", hash = "sha256:491c8be9c040f5390f5bf44a5b07752bd07f56edf992381b05c701439eec10f6"},
@@ -3953,27 +3954,6 @@ files = [
     {file = "sniffio-1.3.1-py3-none-any.whl", hash = "sha256:2f6da418d1f1e0fddd844478f41680e794e6051915791a034ff65e5f100525a2"},
     {file = "sniffio-1.3.1.tar.gz", hash = "sha256:f4324edc670a0f49750a81b895f35c3adb843cca46f0530f79fc1babb23789dc"},
 ]
-
-[[package]]
-name = "sounddevice"
-version = "0.5.1"
-description = "Play and Record Sound with Python"
-optional = false
-python-versions = ">=3.7"
-groups = ["main"]
-files = [
-    {file = "sounddevice-0.5.1-py3-none-any.whl", hash = "sha256:e2017f182888c3f3c280d9fbac92e5dbddac024a7e3442f6e6116bd79dab8a9c"},
-    {file = "sounddevice-0.5.1-py3-none-macosx_10_6_x86_64.macosx_10_6_universal2.whl", hash = "sha256:d16cb23d92322526a86a9490c427bf8d49e273d9ccc0bd096feecd229cde6031"},
-    {file = "sounddevice-0.5.1-py3-none-win32.whl", hash = "sha256:d84cc6231526e7a08e89beff229c37f762baefe5e0cc2747cbe8e3a565470055"},
-    {file = "sounddevice-0.5.1-py3-none-win_amd64.whl", hash = "sha256:4313b63f2076552b23ac3e0abd3bcfc0c1c6a696fc356759a13bd113c9df90f1"},
-    {file = "sounddevice-0.5.1.tar.gz", hash = "sha256:09ca991daeda8ce4be9ac91e15a9a81c8f81efa6b695a348c9171ea0c16cb041"},
-]
-
-[package.dependencies]
-CFFI = ">=1.0"
-
-[package.extras]
-numpy = ["NumPy"]
 
 [[package]]
 name = "sqlalchemy"

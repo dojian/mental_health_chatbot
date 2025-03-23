@@ -9,4 +9,4 @@ resources:
 images:
   - name: genzen-backend
     newName: genzen-backend
-    newTag: v01
+    newTag: v02

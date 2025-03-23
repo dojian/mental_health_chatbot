@@ -32,6 +32,26 @@ Integrate minikube with docker: `eval $(minikube docker-env)`
 apply dev overlay: `kubectl apply -k .k8s/overlays/dev`
 delete dev overlay: `kubectl delete -k .k8s/overlays/dev`
 
+## Running it locally
+
+## Running it locally through docker
+```bash
+docker build -t genzen-backend:<tag> .
+
+# Ensure redis-servce and postgres-service with a network genzen-net
+docker run -d --name redis-service --network genzen-net redis:7.4.2-alpine
+docker run -d --name postgres-service --network genzen-net \
+  -e POSTGRES_USER=postgres_user \
+  -e POSTGRES_PASSWORD=super_secret_pass \
+  -e POSTGRES_DB=postgres_db_name \
+  -p 5432:5432
+  postgres:14-alpine
+
+docker run -p 8001:8001 --network genzen-net \
+  --env-file .env-docker \
+  genzen-backend:<tag>
+```
+
 ### Testing
 #### Test Registration /auth/register with Postman
 post with body raw as json

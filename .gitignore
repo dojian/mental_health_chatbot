@@ -15,7 +15,7 @@ minikube-darwin-arm64
 start_backend.sh
 *.sql
 .vscode
-
+.env-docker
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]

@@ -1,17 +1,26 @@
 import boto3
 import json
 from typing import Dict
-from src.utils.config_setting import Settings
-
-settings = Settings()
+from dotenv import load_dotenv
+import os
+load_dotenv()
+# Retrieve variables
+aws_access_key = os.getenv("AWS_ACCESS_KEY_ID")
+aws_secret_key = os.getenv("AWS_SECRET_ACCESS_KEY")
+aws_region = os.getenv("AWS_REGION")
 
 def mental_health(user_history: str, user_text: str) -> Dict:
     """Calls the SageMaker endpoint for mental health counseling response."""
 
     # Explicitly specify the default profile
-    session = boto3.Session(profile_name=settings.AWS_PROFILE)
-    sm_runtime = session.client('sagemaker-runtime', region_name=settings.AWS_REGION)
-    endpoint = settings.MENTAL_HEALTH_ENDPOINT
+    session = boto3.Session(profile_name='default')
+    sm_runtime = session.client(
+        'sagemaker-runtime', 
+        aws_access_key_id=aws_access_key,
+        aws_secret_access_key=aws_secret_key,
+        region_name=aws_region,
+        )
+    
 
     # Format the input prompt
     prompt = f"""Given a student's Conversation History and Current Message, extract the relevant metadata, including emotion type, emotion intensity (1-5), problem type, and counseling strategy.
@@ -47,7 +56,7 @@ The counselor must return **only** a Structured JSON Response with these fields:
 
     # Invoke SageMaker endpoint
     response = sm_runtime.invoke_endpoint(
-        EndpointName=endpoint, 
+        EndpointName='Deepseek-endpoint', 
         ContentType='application/json', 
         Body=json.dumps(payload).encode('utf-8')
     )

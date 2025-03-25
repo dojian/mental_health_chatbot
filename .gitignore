@@ -16,6 +16,46 @@ start_backend.sh
 *.sql
 .vscode
 .env-docker
+
+#Nextjs
+# Dependencies
+node_modules/
+
+# Next.js build output
+.next/
+.swc/
+
+# Production build output
+out/
+build/
+
+# Environment variables
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Logs
+*.log
+next-debug.log
+
+# Temporary files and directories
+tmp/
+temp/
+*.tmp
+
+# Yarn specific
+.pnp
+.pnp.meta
+yarn-error.log
+
+# Optional: VS Code files
+.vscode/
+
+# Optional: MacOS files
+.DS_Store
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]

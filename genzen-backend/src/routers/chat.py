@@ -1,17 +1,12 @@
 import uuid
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlmodel import Session
-
-# from langchain_openai import ChatOpenAI
 from langchain_core.messages import HumanMessage, AIMessage
-
 from src.models.models import GenZenUser, ChatHistory, ChatSession, SurveyData
-from src.models.schemas import ChatRequest
+from src.models.schemas import ChatRequest, PreChatSurveyCreate, PostChatSurveyCreate
 from src.connections.db import get_session
 from src.utils.auth_utils import get_current_user
 from src.agents.agent import graph, llm, llm_with_tools
-
-from src.models.schemas import PreChatSurveyCreate, PostChatSurveyCreate
 
 router = APIRouter()
 
@@ -56,6 +51,7 @@ async def agent_chat(
     Handles user queries using the langgraph agent.
     """
     try:
+
         # Step 1: Handle session management
         if request.session_id:
             chat_session = session.query(ChatSession).filter(
@@ -96,7 +92,12 @@ async def agent_chat(
             "configurable": {
                 "thread_id": session_id,  # For short-term memory (checkpointer)
                 "user_id": str(current_user.id),  # For long-term memory (store)
-                "checkpoint_ns": f"user_{current_user.id}"  # Optional namespace for checkpoints
+                "checkpoint_ns": f"user_{current_user.id}",  # Optional namespace for checkpoints
+                "session_context": {
+                    "session_id": session_id,
+                    "session_name": chat_session.session_name if hasattr(chat_session, "session_name") else None,
+                    "session_start": str(chat_session.created_at) if hasattr(chat_session, "created_at") else None
+                }
             }
         }
 
@@ -139,89 +140,97 @@ async def agent_chat(
 @router.post("/chat")
 async def chat(
     request: ChatRequest,
-    session: ChatSession = Depends(get_session),
+    session: Session = Depends(get_session),
     current_user: GenZenUser = Depends(get_current_user),
 ):
     """
     Handles user queries, stores them in ChatHistory, sends them to OpenAI,
     and stores and returns both the query and OpenAI's response.
     """
-    
-    # Step 1: Retrieve or create a session
-    if request.session_id:
-        # Retrieve existing session
-        chat_session = session.query(ChatSession).filter(
-            ChatSession.session_id == request.session_id,
-            ChatSession.user_id == current_user.id,
-        ).first()
-        if not chat_session:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="Chat session not found"
+    try:
+
+        # Step 1: Retrieve or create a session
+        if request.session_id:
+            chat_session = session.query(ChatSession).filter(
+                ChatSession.session_id == request.session_id,
+                ChatSession.user_id == current_user.id,
+            ).first()
+            if not chat_session:
+                raise HTTPException(
+                    status_code=status.HTTP_404_NOT_FOUND,
+                    detail="Chat session not found"
+                )
+            session_id = request.session_id
+        else:
+            session_id = f"{current_user.id}-{uuid.uuid4().hex}"
+            chat_session = ChatSession(
+                session_id=session_id,
+                user_id=current_user.id,
             )
-        session_id = request.session_id
-    else:
-        # Create a new session if no session_id is provided
-        session_id = f"{current_user.id}-{uuid.uuid4().hex}"
-        chat_session = ChatSession(
+            session.add(chat_session)
+            session.commit()
+
+        # Step 2: Retrieve existing chat history for this session
+        existing_messages = (
+            session.query(ChatHistory)
+            .filter(ChatHistory.session_id == session_id)
+            .order_by(ChatHistory.timestamp)
+            .all()
+        )
+
+        # Format history for OpenAI
+        messages = [
+            {"role": message.role, "content": message.message}
+            for message in existing_messages
+        ]
+
+        # Add user's new query to the message list
+        messages.append({"role": "user", "content": request.query})
+
+        # Step 3: Send query + history to OpenAI and get response
+        try:
+            openai_response = model(messages)
+            assistant_msg_txt = openai_response.content
+        except Exception as e:
+            raise HTTPException(
+                status_code=500,
+                detail=f"Error communicating with OpenAI: {str(e)}"
+            )
+
+        # Step 4: Log user's query and assistant's response in ChatHistory
+        # Serialize metadata with datetime handling
+        metadata = request.session_metadata.model_dump()
+        
+        user_message = ChatHistory(
             session_id=session_id,
             user_id=current_user.id,
+            role="user",
+            message=request.query,
+            chat_metadata=metadata
         )
-        session.add(chat_session)
+        
+        assistant_message = ChatHistory(
+            session_id=session_id,
+            user_id=current_user.id,
+            role="assistant",
+            message=assistant_msg_txt,
+            chat_metadata={}  # Empty metadata for assistant messages
+        )
+        
+        session.add_all([user_message, assistant_message])
         session.commit()
 
-    # Step 2: Retrieve existing chat history for this session
-    existing_messages = (
-        session.query(ChatHistory)
-        .filter(ChatHistory.session_id == session_id)
-        .order_by(ChatHistory.timestamp)
-        .all()
-    )
+        return {
+            "session_id": session_id,
+            "query": request.query,
+            "response": assistant_msg_txt,
+        }
 
-    # Format history for OpenAI
-    messages = [
-        {"role": message.role, "content": message.message}
-        for message in existing_messages
-    ]
-
-    # Add user's new query to the message list
-    messages.append({"role": "user", "content": request.query})
-
-    # Step 3: Send query + history to OpenAI and get response
-    try:
-        openai_response = model(messages)
-        assistant_msg_txt = openai_response.content
     except Exception as e:
         raise HTTPException(
             status_code=500,
-            detail=f"Error communicating with OpenAI: {str(e)}"
+            detail=f"Error in chat endpoint: {str(e)}"
         )
-
-    # Step 4: Log user's query and assistant's response in ChatHistory
-    user_message = ChatHistory(
-        session_id=session_id,
-        user_id=current_user.id,
-        role="user",
-        message=request.query,
-        metadata=request.metadata.model_dump()
-    )
-    
-    assistant_message = ChatHistory(
-        session_id=session_id,
-        user_id=current_user.id,
-        role="assistant",
-        message=assistant_msg_txt,
-    )
-    
-    # Use add_all to add multiple objects at once
-    session.add_all([user_message, assistant_message])
-    session.commit()
-
-    return {
-        "session_id": session_id,
-        "query": request.query,
-        "response": assistant_msg_txt,
-    }
 
 @router.post("/pre-chat-survey")
 async def submit_pre_chat_survey(
@@ -229,7 +238,8 @@ async def submit_pre_chat_survey(
     session: Session = Depends(get_session),
     current_user: GenZenUser = Depends(get_current_user),
 ):
-    survey_data = SurveyData(        user_id = current_user.id,
+    survey_data = SurveyData(
+        user_id = current_user.id,
         session_id = survey.session_id,
         survey_type = "pre",
         data = survey.model_dump()

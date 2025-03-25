@@ -1,36 +1,17 @@
-# import psycopg
-import os
-# from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
-# from langchain_core.runnables.history import RunnableWithMessageHistory
-# from langchain_core.chat_history import BaseChatMessageHistory
-# from langchain_postgres import PostgresChatMessageHistory
-from dotenv import load_dotenv
+from psycopg_pool import ConnectionPool
+from sqlmodel import SQLModel, Session, create_engine
+from datetime import datetime
 from langgraph.checkpoint.postgres import PostgresSaver
 from langgraph.store.postgres import PostgresStore
-from psycopg_pool import ConnectionPool
-
-# from langchain_openai import OpenAIEmbeddings
-
-load_dotenv()
-
-from pydantic_settings import BaseSettings
-from sqlmodel import SQLModel, Session, create_engine
-
-class Settings(BaseSettings):
-    POSTGRES_USER: str = os.getenv("POSTGRES_USER")
-    POSTGRES_PASSWORD: str = os.getenv("POSTGRES_PASSWORD")
-    POSTGRES_HOST: str = os.getenv("POSTGRES_HOST")
-    POSTGRES_PORT: str = os.getenv("POSTGRES_PORT")
-    POSTGRES_DB: str = os.getenv("POSTGRES_DB")
+from langchain_openai import OpenAIEmbeddings
+from src.utils.config_setting import Settings
 
 settings = Settings()
 
-SQLALCHEMY_DB_URI = f"postgresql://{settings.POSTGRES_USER}:{settings.POSTGRES_PASSWORD}@{settings.POSTGRES_HOST}:{settings.POSTGRES_PORT}/{settings.POSTGRES_DB}?sslmode=disable"
-POSTGRES_CONN_STRING = SQLALCHEMY_DB_URI
-
+POSTGRES_CONN_STRING = f"postgresql://{settings.POSTGRES_USER}:{settings.POSTGRES_PASSWORD}@{settings.POSTGRES_HOST}:{settings.POSTGRES_PORT}/{settings.POSTGRES_DB}?sslmode=disable"
 engine = create_engine(
-    SQLALCHEMY_DB_URI,
-    echo=True
+    POSTGRES_CONN_STRING,
+    echo=settings.DEBUG
 )
 
 connection_kwargs = {
@@ -45,6 +26,10 @@ pool = ConnectionPool(
     open=True
 )
 checkpointer = PostgresSaver(pool)
+
+# Initialize OpenAI embeddings for semantic search
+embeddings = OpenAIEmbeddings()
+# Set up memory store with vector search - only pass required parameters
 memory_store = PostgresStore(pool)
 
 def get_connection():
@@ -69,5 +54,51 @@ def setup_checkpoint_and_memory_store():
     """
     Initialize the Postgres db for checkpointer and store.
     """
-    checkpointer.setup()
-    memory_store.setup()
+    try:
+        # Print connection parameters (obscuring password)
+        conn_info = POSTGRES_CONN_STRING.replace(settings.POSTGRES_PASSWORD, "********")
+        print(f"Setting up memory systems with connection: {conn_info}")
+        
+        # Initialize checkpointer for short-term memory
+        print("Setting up checkpointer...")
+        checkpointer.setup()
+        print("Checkpointer initialized successfully.")
+        
+        # Initialize memory store for long-term memory
+        print("Setting up memory store...")
+        memory_store.setup()
+        print("Memory store initialized successfully.")
+        
+        # Verify PostgresStore is working with a simple put/get operation
+        try:
+            print("Testing memory store with a simple operation...")
+            test_namespace = ("test_user", "test_facts")
+            test_id = "test_id"
+            test_data = {
+                "content": "Test message",
+                "timestamp": str(datetime.now())
+            }
+            
+            # Store test data
+            memory_store.put(test_namespace, test_id, test_data)
+            print("Successfully stored test data")
+            
+            # Try to retrieve the test item
+            retrieved = memory_store.get(test_namespace, test_id)
+            if retrieved:
+                print("Successfully retrieved test data")
+            else:
+                print("Warning: Could not retrieve test data")
+            
+            # Clean up test data
+            memory_store.delete(test_namespace, test_id)
+            print("Memory store verification complete")
+        except Exception as e:
+            print(f"Warning: Memory store verification failed: {e}")
+            raise
+            
+    except Exception as e:
+        print(f"Error setting up memory systems: {e}")
+        import traceback
+        traceback.print_exc()
+        raise

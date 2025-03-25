@@ -7,6 +7,7 @@ from langgraph.graph import START, StateGraph, MessagesState
 from langgraph.prebuilt import tools_condition, ToolNode
 from src.connections.db import checkpointer, memory_store
 from src.agents.tools import mental_health, remember_information, recall_information
+from src.agents.pii_masker import anonymize_pii
 
 load_dotenv()
 
@@ -144,7 +145,7 @@ def assistant(state: MessagesState):
     return {
         "messages": [response],
         "user_history": user_history,
-        "user_text": user_text,
+        "user_text": anonymize_pii(user_text),
     }
 
 # Build graph

@@ -1,9 +1,8 @@
-import os
 import psycopg2
-from dotenv import load_dotenv
-from sqlmodel import SQLModel
-from src.connections.db import engine, pool
-load_dotenv()
+from src.connections.db import pool
+from src.utils.config_setting import Settings
+
+settings = Settings()
 
 def delete_database():
     """
@@ -23,11 +22,11 @@ def delete_database():
     ]
 
     conn = psycopg2.connect(
-        dbname=os.getenv("POSTGRES_DB"),
-        user=os.getenv("POSTGRES_USER"),
-        password=os.getenv("POSTGRES_PASSWORD"),
-        host=os.getenv("POSTGRES_HOST"),
-        port=os.getenv("POSTGRES_PORT"),
+        dbname=settings.POSTGRES_DB,
+        user=settings.POSTGRES_USER,
+        password=settings.POSTGRES_PASSWORD,
+        host=settings.POSTGRES_HOST,
+        port=settings.POSTGRES_PORT,
     )
 
     try:

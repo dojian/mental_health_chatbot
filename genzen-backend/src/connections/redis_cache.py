@@ -4,9 +4,9 @@ from fastapi_cache import FastAPICache
 from fastapi_cache.backends.redis import RedisBackend
 from redis import asyncio as aioredis
 
-import os
-from dotenv import load_dotenv
-load_dotenv()
+from src.utils.config_setting import Settings
+
+settings = Settings()
 
 session_redis = None
 cache_redis = None
@@ -18,11 +18,11 @@ async def init_redis(app) -> None:
     """
     global cache_redis, session_redis
 
-    cache_redis = aioredis.from_url(os.getenv("REDIS_URL"))
+    cache_redis = aioredis.from_url(settings.REDIS_URL)
     await cache_redis.ping()
     FastAPICache.init(RedisBackend(cache_redis), prefix="fastapi-cache")
 
-    session_redis = aioredis.from_url(os.getenv("REDIS_URL"))
+    session_redis = aioredis.from_url(settings.REDIS_URL)
     await session_redis.ping()
 
     app.state.cache_redis = cache_redis

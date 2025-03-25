@@ -1,7 +1,6 @@
 from src.models.models import GenZenUser
 from datetime import timedelta, datetime, UTC
 from sqlalchemy.orm import Session
-import os
 import jwt
 from passlib.context import CryptContext
 from fastapi.security import OAuth2PasswordBearer
@@ -9,10 +8,14 @@ from fastapi import Depends, HTTPException, status
 from src.connections.db import get_session
 from src.connections.redis_cache import get_redis_client
 
-JWT_SECRET = os.getenv("JWT_SECRET")
-ALGORITHM = os.getenv("ALGORITHM", "HS256")
-ACCESS_TOKEN_EXPIRE_MINUTES = int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", 30))
-REDIS_SESSION_PREFIX = os.getenv("REDIS_SESSION_PREFIX")
+from src.utils.config_setting import Settings
+
+settings = Settings()
+
+JWT_SECRET = settings.JWT_SECRET
+ALGORITHM = settings.ALGORITHM
+ACCESS_TOKEN_EXPIRE_MINUTES = int(settings.ACCESS_TOKEN_EXPIRE_MINUTES)
+REDIS_SESSION_PREFIX = settings.REDIS_SESSION_PREFIX
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="auth/login")

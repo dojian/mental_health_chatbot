@@ -1,14 +1,17 @@
 import boto3
 import json
 from typing import Dict
+from src.utils.config_setting import Settings
+
+settings = Settings()
 
 def mental_health(user_history: str, user_text: str) -> Dict:
     """Calls the SageMaker endpoint for mental health counseling response."""
 
     # Explicitly specify the default profile
-    session = boto3.Session(profile_name='default')
-    sm_runtime = session.client('sagemaker-runtime', region_name='us-east-2')
-    endpoint = 'Deepseek-endpoint'
+    session = boto3.Session(profile_name=settings.AWS_PROFILE)
+    sm_runtime = session.client('sagemaker-runtime', region_name=settings.AWS_REGION)
+    endpoint = settings.MENTAL_HEALTH_ENDPOINT
 
     # Format the input prompt
     prompt = f"""Given a student's Conversation History and Current Message, extract the relevant metadata, including emotion type, emotion intensity (1-5), problem type, and counseling strategy.

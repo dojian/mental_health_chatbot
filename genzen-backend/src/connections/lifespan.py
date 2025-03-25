@@ -22,8 +22,8 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     logging.info(f"{datetime.now()}: LIFESPAN - Connected to Redis")
 
     ### OpenAI ###
-    model = get_llm_client()
-    logging.info(f"{datetime.now()}: LIFESPAN - Connected to OpenAI - gpt-4o-mini")
+    model = get_llm_client(temperature=0.6)
+    logging.info(f"{datetime.now()}: LIFESPAN - Connected to OpenAI - {model.model_name}")
     
     ### Postgres ###
     create_db_and_tables()

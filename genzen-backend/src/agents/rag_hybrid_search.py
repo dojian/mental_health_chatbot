@@ -1,9 +1,7 @@
 import boto3
 import pickle
 import cohere
-import os
-from dotenv import load_dotenv
-import time
+# import time
 from langchain_qdrant import QdrantVectorStore
 from langchain_community.retrievers import BM25Retriever
 from langchain.retrievers import EnsembleRetriever
@@ -11,8 +9,11 @@ from langchain.schema import Document
 from qdrant_client import QdrantClient
 from qdrant_client.models import VectorParams, Filter, FieldCondition, MatchAny
 from langchain_community.embeddings import FastEmbedEmbeddings
-from typing import List
-load_dotenv()
+
+
+from src.utils.config_setting import Settings
+
+settings = Settings()
 
 class RAGPipeline:
     def __init__(self):
@@ -34,9 +35,9 @@ class RAGPipeline:
 
         # Download the pre-chunked text document file from S3
         s3.download_file(
-            Bucket='my-genzen-bucket',
-            Key='data/contextualized-categorized-chunks-2025-03-22.pkl',  # Path where the embeddings are saved in S3
-            Filename='/tmp/text_chunks.pkl'  # Temporary local path to save the file
+            Bucket=settings.S3_BUCKET_NAME,
+            Key=settings.S3_BUCKET_EMBEDDINGS_KEY,  # Path where the embeddings are saved in S3
+            Filename=f"{settings.S3_BUCKET_TEMP_PATH}/text_chunks.pkl"  # Temporary local path to save the file
         )
         
         # Load the embeddings from the downloaded file
@@ -51,8 +52,8 @@ class RAGPipeline:
         bm25_retriever.k = self.initial_k #top k most relevant documents, as ranked by the BM25 score.
 
         # Setup vector retriever
-        self.embeddings_model = FastEmbedEmbeddings(model_name="BAAI/bge-base-en-v1.5")
-        self.qdrant_client = QdrantClient(path="/tmp/qdrant_data")
+        self.embeddings_model = FastEmbedEmbeddings(model_name=settings.EMBEDDING_MODEL)
+        self.qdrant_client = QdrantClient(path=f"{settings.S3_BUCKET_TEMP_PATH}/qdrant_data")
 
         # Check if the collection already exists
         # Avoid adding repeated documents into vectorstore if collection already exists
@@ -96,7 +97,7 @@ class RAGPipeline:
         )
 
         self.base_retriever = fusion_retriever
-        self.cohere_client = cohere.Client(os.getenv("COHERE_API_KEY"))
+        self.cohere_client = cohere.Client(settings.COHERE_API_KEY)
 
         print("RAG pipeline initialized with Qdrant + BM25 + RankFusion.")
 
@@ -147,7 +148,7 @@ class RAGPipeline:
 
         # Step 2: Rerank using Cohere
         response = self.cohere_client.rerank(
-            model="rerank-english-v3.0",
+            model=settings.RERANK_MODEL,
             query=query,
             documents=documents,
             top_n=min(final_k, len(documents))  # Prevent index errors

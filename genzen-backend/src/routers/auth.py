@@ -1,22 +1,22 @@
+import jwt, uuid, os
 from fastapi import APIRouter, HTTPException, Depends, status
 from fastapi.security import OAuth2PasswordRequestForm, OAuth2PasswordBearer
-import jwt, uuid, os
-
 from src.models.schemas import Token, CreateGenZenUser
 from src.models.models import GenZenUser
-
 from src.connections.db import get_session
 from src.connections.redis_cache import get_redis_client
-
 from src.utils.auth_utils import verify_password, get_password_hash, get_user, create_access_token
+# from dotenv import load_dotenv
+# load_dotenv()
 
-from dotenv import load_dotenv
-load_dotenv()
+from src.utils.config_setting import Settings
 
-JWT_SECRET = os.getenv("JWT_SECRET")
-ALGORITHM = os.getenv("ALGORITHM")
-ACCESS_TOKEN_EXPIRE_MINUTES = int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES"))
-REDIS_SESSION_PREFIX = os.getenv("REDIS_SESSION_PREFIX")
+settings = Settings()
+
+JWT_SECRET = settings.JWT_SECRET
+ALGORITHM = settings.ALGORITHM
+ACCESS_TOKEN_EXPIRE_MINUTES = int(settings.ACCESS_TOKEN_EXPIRE_MINUTES)
+REDIS_SESSION_PREFIX = settings.REDIS_SESSION_PREFIX
 
 router = APIRouter()
 

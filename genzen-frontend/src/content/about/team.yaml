@@ -1,0 +1,36 @@
+team:
+  - name: Developer Name 1
+    role: Full Stack Developer
+    image: /team/dev1.jpg
+    bio: >
+      As a passionate developer, I focus on creating intuitive and accessible applications
+      that make a positive impact on people's lives. My background in psychology and
+      computer science drives my interest in mental health technology.
+    links:
+      github: https://github.com/dev1
+      linkedin: https://linkedin.com/in/dev1
+      portfolio: https://dev1.com
+
+  - name: Developer Name 2
+    role: AI/ML Engineer
+    image: /team/dev2.jpg
+    bio: >
+      Specializing in natural language processing and machine learning, I work on making
+      our AI interactions more human-like and empathetic. My goal is to create technology
+      that truly understands and supports users' emotional needs.
+    links:
+      github: https://github.com/dev2
+      linkedin: https://linkedin.com/in/dev2
+      portfolio: https://dev2.com
+
+  - name: Developer Name 3
+    role: UX/UI Designer & Frontend Developer
+    image: /team/dev3.jpg
+    bio: >
+      With a focus on user-centered design, I ensure that GenZen provides a calming
+      and intuitive experience. My background in both design and development helps
+      create seamless interactions that prioritize user well-being.
+    links:
+      github: https://github.com/dev3
+      linkedin: https://linkedin.com/in/dev3
+      portfolio: https://dev3.com 

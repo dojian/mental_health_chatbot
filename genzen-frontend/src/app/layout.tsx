@@ -25,7 +25,7 @@ export default function RootLayout({
 
           {/* Main Content with gradient background */}
           <main className="flex-grow bg-gradient-to-b from-purple-300 via-pink-300 to-red-200">
-            <div className="container mx-auto px-4 py-8 max-w-4xl">
+            <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 max-w-4xl">
               {children}
             </div>
           </main>

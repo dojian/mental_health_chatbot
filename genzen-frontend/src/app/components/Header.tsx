@@ -2,18 +2,56 @@
 import Link from 'next/link';
 import { useState } from 'react';
 import { usePathname } from 'next/navigation';
+import { env } from '@/utils/env';
+import Cookies from 'js-cookie';
+import { useAuth } from '@/contexts/AuthContext';
 
 export default function Header() {
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const pathname = usePathname();
+  const { isAuthenticated, setIsAuthenticated } = useAuth();
+
+  const handleSignOut = () => {
+    Cookies.remove(env.jwtStorageKey);
+    setIsAuthenticated(false);
+    setIsMenuOpen(false);
+    window.location.href = '/';
+  };
+
+  const handleLinkClick = () => {
+    setIsMenuOpen(false);
+  };
 
   const navLinks = [
     { href: '/', label: 'Home' },
     { href: '/about', label: 'About' },
-    { href: '/chat', label: 'Chat' },
+    ...(isAuthenticated ? [{ href: '/chat', label: 'Chat' }] : []),
     { href: '/privacy', label: 'Privacy' },
   ];
+
+  const authLinks = isAuthenticated ? (
+    <button
+      onClick={handleSignOut}
+      className="text-gray-700 hover:text-gray-900"
+    >
+      Sign Out
+    </button>
+  ) : (
+    <div className="flex items-center space-x-4">
+      <Link
+        href="/login"
+        className="text-gray-700 hover:text-gray-900"
+      >
+        Sign In
+      </Link>
+      <Link
+        href="/register"
+        className="bg-blue-600 text-white hover:bg-blue-700 py-2 px-4 rounded-md"
+      >
+        Register
+      </Link>
+    </div>
+  );
 
   return (
     <header className="bg-white border-b">
@@ -31,19 +69,32 @@ export default function Header() {
             aria-label="Toggle menu"
           >
             <svg
-              className="w-6 h-6"
+              className={`${isMenuOpen ? 'hidden' : 'block'} h-6 w-6`}
+              xmlns="http://www.w3.org/2000/svg"
               fill="none"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth="2"
               viewBox="0 0 24 24"
               stroke="currentColor"
             >
-              {isMenuOpen ? (
-                <path d="M6 18L18 6M6 6l12 12" />
-              ) : (
-                <path d="M4 6h16M4 12h16M4 18h16" />
-              )}
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M4 6h16M4 12h16M4 18h16"
+              />
+            </svg>
+            <svg
+              className={`${isMenuOpen ? 'block' : 'hidden'} h-6 w-6`}
+              xmlns="http://www.w3.org/2000/svg"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M6 18L18 6M6 6l12 12"
+              />
             </svg>
           </button>
 
@@ -60,12 +111,7 @@ export default function Header() {
                 {link.label}
               </Link>
             ))}
-            <button
-              onClick={() => setIsAuthenticated(!isAuthenticated)}
-              className="border border-gray-300 bg-gray-50 hover:bg-gray-100 text-gray-700 py-2 px-6 rounded-full"
-            >
-              {isAuthenticated ? 'Logout' : 'Login'}
-            </button>
+            {authLinks}
           </nav>
         </div>
 
@@ -74,6 +120,7 @@ export default function Header() {
           className={`${
             isMenuOpen ? 'block' : 'hidden'
           } md:hidden mt-4 pb-4 space-y-4`}
+          data-testid="mobile-menu"
         >
           {navLinks.map((link) => (
             <Link
@@ -82,20 +129,36 @@ export default function Header() {
               className={`block text-gray-700 hover:text-gray-900 py-2 ${
                 pathname === link.href ? 'font-semibold' : ''
               }`}
-              onClick={() => setIsMenuOpen(false)}
+              onClick={handleLinkClick}
             >
               {link.label}
             </Link>
           ))}
-          <button
-            onClick={() => {
-              setIsAuthenticated(!isAuthenticated);
-              setIsMenuOpen(false);
-            }}
-            className="w-full text-left border border-gray-300 bg-gray-50 hover:bg-gray-100 text-gray-700 py-2 px-6 rounded-full"
-          >
-            {isAuthenticated ? 'Logout' : 'Login'}
-          </button>
+          {isAuthenticated ? (
+            <button
+              onClick={handleSignOut}
+              className="block text-gray-700 hover:text-gray-900 py-2"
+            >
+              Sign Out
+            </button>
+          ) : (
+            <>
+              <Link
+                href="/login"
+                className="block text-gray-700 hover:text-gray-900 py-2"
+                onClick={handleLinkClick}
+              >
+                Sign In
+              </Link>
+              <Link
+                href="/register"
+                className="block bg-blue-600 text-white hover:bg-blue-700 py-2 px-4 rounded-md text-center"
+                onClick={handleLinkClick}
+              >
+                Register
+              </Link>
+            </>
+          )}
         </nav>
       </div>
     </header>

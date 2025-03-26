@@ -1,0 +1,54 @@
+title: Privacy Policy
+lastUpdated: "2024-03-20"
+
+sections:
+  - title: Introduction
+    content: |
+      At GenZen, we take your privacy seriously. This Privacy Policy explains how we collect, use, disclose, and safeguard your information when you use our mental health chatbot service.
+
+  - title: Information We Collect
+    content: |
+      We collect information that you provide directly to us, including:
+      - Account information (username, email)
+      - Chat history and conversations
+      - Usage data and analytics
+      - Technical information (IP address, browser type, device information)
+
+  - title: How We Use Your Information
+    content: |
+      We use the collected information to:
+      - Provide and maintain our service
+      - Improve and personalize your experience
+      - Process your transactions
+      - Send you important updates and notifications
+      - Comply with legal obligations
+
+  - title: Data Security
+    content: |
+      We implement appropriate security measures to protect your personal information, including:
+      - Encryption of data in transit and at rest
+      - Regular security assessments
+      - Access controls and authentication
+      - Secure data storage practices
+
+  - title: Data Sharing
+    content: |
+      We do not sell your personal information. We may share your data with:
+      - Service providers who assist in our operations
+      - Law enforcement when required by law
+      - Other users only with your explicit consent
+
+  - title: Your Rights
+    content: |
+      You have the right to:
+      - Access your personal data
+      - Correct inaccurate data
+      - Request deletion of your data
+      - Opt-out of marketing communications
+      - Export your data
+
+  - title: Contact Us
+    content: |
+      If you have any questions about this Privacy Policy, please contact us at:
+      Email: privacy@genzen.com
+      Address: [Your Company Address] 

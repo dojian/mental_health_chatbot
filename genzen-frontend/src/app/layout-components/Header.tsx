@@ -32,15 +32,15 @@ export default function Header() {
   const authLinks = isAuthenticated ? (
     <button
       onClick={handleSignOut}
-      className="text-gray-700 hover:text-gray-900"
+      className="text-gray-700 hover:text-gray-900 pb-2"
     >
       Sign Out
     </button>
   ) : (
-    <div className="flex items-center space-x-4">
+    <div className="flex items-center space-x-8">
       <Link
         href="/login"
-        className="text-gray-700 hover:text-gray-900"
+        className="text-gray-700 hover:text-gray-900 pb-2"
       >
         Sign In
       </Link>
@@ -137,7 +137,7 @@ export default function Header() {
           {isAuthenticated ? (
             <button
               onClick={handleSignOut}
-              className="block text-gray-700 hover:text-gray-900 py-2"
+              className="block text-gray-700 hover:text-gray-900 py-2 w-full text-left"
             >
               Sign Out
             </button>

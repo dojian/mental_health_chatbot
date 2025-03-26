@@ -25,4 +25,13 @@ export interface TeamMember {
 
 export interface Team {
   team: TeamMember[];
+}
+
+export interface Privacy {
+  title: string;
+  lastUpdated: string;
+  sections: {
+    title: string;
+    content: string;
+  }[];
 } 

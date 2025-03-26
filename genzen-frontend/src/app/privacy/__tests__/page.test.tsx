@@ -1,39 +1,45 @@
 import { render, screen } from '@testing-library/react';
-import PrivacyPage from '../page';
+import Privacy from '../page';
+import { getPrivacyContent } from '@/utils/content';
 
-// Mock the fetch function
-global.fetch = jest.fn();
+// Mock the content function
+jest.mock('@/utils/content', () => ({
+  getPrivacyContent: jest.fn(),
+}));
 
 describe('PrivacyPage', () => {
+  const mockPrivacyContent = {
+    title: 'Privacy Policy',
+    lastUpdated: '2024-03-20',
+    sections: [
+      {
+        title: 'Section 1',
+        content: 'Content 1',
+      },
+      {
+        title: 'Section 2',
+        content: 'Content 2',
+      },
+    ],
+  };
+
   beforeEach(() => {
-    // Clear all mocks before each test
+    // Reset all mocks before each test
     jest.clearAllMocks();
+    
+    // Setup default mock implementation
+    (getPrivacyContent as jest.Mock).mockResolvedValue(mockPrivacyContent);
   });
 
   it('should render privacy content', async () => {
-    // Mock the YAML content
-    const mockContent = {
-      title: 'Privacy Policy',
-      lastUpdated: '2024-03-20',
-      sections: [
-        {
-          title: 'Introduction',
-          content: 'Test introduction content'
-        }
-      ]
-    };
-
-    // Mock the fetch response
-    (global.fetch as jest.Mock).mockResolvedValueOnce({
-      ok: true,
-      text: () => Promise.resolve(JSON.stringify(mockContent))
-    });
-
-    render(<PrivacyPage />);
+    render(await Privacy());
 
     // Check for content
     expect(screen.getByText('Privacy Policy')).toBeInTheDocument();
-    expect(screen.getByText('Introduction')).toBeInTheDocument();
-    expect(screen.getByText('Test introduction content')).toBeInTheDocument();
+    expect(screen.getByText('Last updated: 2024-03-20')).toBeInTheDocument();
+    expect(screen.getByText('Section 1')).toBeInTheDocument();
+    expect(screen.getByText('Content 1')).toBeInTheDocument();
+    expect(screen.getByText('Section 2')).toBeInTheDocument();
+    expect(screen.getByText('Content 2')).toBeInTheDocument();
   });
 }); 

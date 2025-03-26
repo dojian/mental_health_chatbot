@@ -2,7 +2,7 @@ import { getPrivacyContent } from '@/utils/content';
 import type { Privacy } from '@/types/about';
 
 export default async function Privacy() {
-    const privacy = getPrivacyContent();
+    const privacy = await getPrivacyContent();
 
     return (
         <section className="mb-12">

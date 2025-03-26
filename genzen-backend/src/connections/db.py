@@ -5,7 +5,7 @@ from langgraph.checkpoint.postgres import PostgresSaver
 from langgraph.store.postgres import PostgresStore
 from langchain_openai import OpenAIEmbeddings
 from src.utils.config_setting import Settings
-
+import atexit
 settings = Settings()
 
 POSTGRES_CONN_STRING = f"postgresql://{settings.POSTGRES_USER}:{settings.POSTGRES_PASSWORD}@{settings.POSTGRES_HOST}:{settings.POSTGRES_PORT}/{settings.POSTGRES_DB}?sslmode=disable"
@@ -102,3 +102,12 @@ def setup_checkpoint_and_memory_store():
         import traceback
         traceback.print_exc()
         raise
+    
+def close_pool():
+    """Gracefully close the connection pool."""
+    if pool is not None:
+        print("Closing database connection pool...")
+        pool.close()
+
+# Ensure the pool is closed when the program exits
+atexit.register(close_pool)

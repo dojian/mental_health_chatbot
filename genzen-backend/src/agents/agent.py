@@ -162,4 +162,13 @@ builder.add_conditional_edges(
 builder.add_edge("tools", "assistant")
 
 # Compile graph
-graph = builder.compile(checkpointer=checkpointer)
+graph = builder.compile() #checkpointer=checkpointer
+
+if __name__ == "__main__": 
+    messages=[HumanMessage(content="I am Lily. I feel sad about my calculus homework. I don't know if i will be about to understand the chain rule.")]
+    # Invoke graph
+    result=graph. invoke({"messages": messages})
+
+    # Print the messages
+    for m in result['messages']:
+        m.pretty_print()

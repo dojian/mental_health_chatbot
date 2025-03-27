@@ -1,10 +1,14 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { ChatMessage, ChatState, SessionMetadata } from '@/types/chat';
 import { sendChatMessage } from '@/utils/api';
+import DisclaimerModal from '../layout-components/DisclaimerModal';
 
 export default function ChatPage() {
+  const router = useRouter();
+  const [showDisclaimer, setShowDisclaimer] = useState(true);
   const [chatState, setChatState] = useState<ChatState>({
     messages: [],
     sessionId: null,
@@ -29,6 +33,38 @@ export default function ChatPage() {
       inputRef.current?.focus();
     }
   }, [chatState.isLoading]);
+
+  const handleDisclaimerAccept = async () => {
+    try {
+      // Submit pre-chat survey with disclaimer acceptance
+      const response = await fetch('/api/pre-chat-survey', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          session_id: "string", // Required field, will be replaced by backend
+          emotional_intensity: 1, // Required field, default to 1
+          selected_topics: [],
+          suggestions_enabled: true,
+          user_disclaimer_accepted: true,
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to submit pre-chat survey');
+      }
+
+      // Even if the API call fails, we'll still show the chat interface
+      // since the user has accepted the disclaimer
+      setShowDisclaimer(false);
+    } catch (error) {
+      console.error('Error submitting pre-chat survey:', error);
+      // Don't redirect to privacy page, just show the chat interface
+      setShowDisclaimer(false);
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -86,6 +122,10 @@ export default function ChatPage() {
       }));
     }
   };
+
+  if (showDisclaimer) {
+    return <DisclaimerModal isOpen={showDisclaimer} onAccept={handleDisclaimerAccept} />;
+  }
 
   return (
     <div className="flex flex-col h-[calc(100vh-12rem)]">

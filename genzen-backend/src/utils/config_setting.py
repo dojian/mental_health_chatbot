@@ -40,3 +40,6 @@ class Settings(BaseSettings):
     # OpenAI
     OPENAI_API_KEY: str = os.getenv("OPENAI_API_KEY")
     OPENAI_MODEL_NAME: str = os.getenv("OPENAI_MODEL_NAME")
+    
+    #allow advice
+    allow_advice: bool = False

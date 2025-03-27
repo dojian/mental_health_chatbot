@@ -8,7 +8,9 @@ from langgraph.prebuilt import tools_condition, ToolNode
 from src.connections.db import checkpointer, memory_store
 from src.agents.tools import mental_health, remember_information, recall_information
 from src.agents.pii_masker import anonymize_pii
+from src.utils.config_setting import Settings
 
+settings = Settings()
 load_dotenv()
 
 model_name = os.getenv("OPENAI_MODEL_NAME")
@@ -21,7 +23,9 @@ llm = ChatOpenAI(model=model_name)
 llm_with_tools = llm.bind_tools(tools)
 
 # System message
-sys_msg = SystemMessage(content="You are a helpful student assistant tasked with mental health counseling. When counseling, make sure to use the **answer** directly from the mental_health tool output")
+sys_msg_advice = SystemMessage(content="You are a helpful student assistant tasked with mental health counseling. When counseling, make sure to use the **answer** directly from the mental_health tool output")
+no_advice_context = "Avoid giving advices or suggestions. Make sure the  'counseling_strategy' mental_health tool output is not 'Providing Suggestions'. "
+sys_msg_no_advice = SystemMessage(content=sys_msg_advice.content + no_advice_context)
 
 # Node
 def assistant(state: MessagesState):
@@ -35,6 +39,16 @@ def assistant(state: MessagesState):
 
     # Get user_id from config if available
     user_id = state.get("configurable", {}).get("user_id", "default_user")
+    
+    # Check if the user has chosen to receive advice
+    allow_advice = settings.allow_advice  # Default to True
+    print('allow advice is set up to',allow_advice) #debug log
+    
+    if allow_advice:
+        sys_msg = sys_msg_advice
+    else:
+        sys_msg = sys_msg_no_advice
+    print('sys_msg is:',sys_msg.content) #debug log
     
     # Expanded trigger phrases to capture more user information
     trigger_facts = [

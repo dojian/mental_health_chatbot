@@ -15,24 +15,29 @@ def mental_health(user_history: str, user_text: str) -> Dict:
     
 
     # Format the input prompt
-    prompt = f"""Given a student's Conversation History and Current Message, extract the relevant metadata, including emotion type, emotion intensity (1-5), problem type, and counseling strategy.
-Then answer the student's Current Message as a counselor based on the metadata. Keep it concise but affirmative.
+    prompt_advice = f"""Given a student's Conversation History and Current Message, extract the relevant metadata, including emotion type, emotion intensity (1-5), problem type, and counseling strategy.
+    Then answer the student's Current Message as a counselor based on the metadata. Keep it concise but affirmative.
 
-**Constraints:** The counselor must not use personal experiences, references to friends, or imagined scenarios. Provide only general suggestions based on the provided context.
+    **Constraints:** The counselor must not use personal experiences, references to friends, or imagined scenarios. Provide only general suggestions based on the provided context.
 
-The counselor must return **only** a Structured JSON Response with these fields: "emotion_type", "emotion_intensity", "problem_type", "counseling_strategy", "answer". Do not include any additional text before or after the JSON.
+    The counselor must return **only** a Structured JSON Response with these fields: "emotion_type", "emotion_intensity", "problem_type", "counseling_strategy", "answer". Do not include any additional text before or after the JSON.
 
-### Student:
-**Conversation History:**
-{user_history}
+    ### Student:
+    **Conversation History:**
+    {user_history}
 
-**Current Message:**
-{user_text}
+    **Current Message:**
+    {user_text}
 
-### Counselor Structured JSON Response:
-```json
-"""
-
+    ### Counselor Structured JSON Response:
+    ```json
+    """
+    no_advice_context = "Only use 'Question', 'Affirmation and Reassurance', 'Restatement or Paraphrasing' as 'counseling_strategy'."
+    prompt_no_advice = prompt_advice + no_advice_context
+    if settings.allow_advice:
+        prompt = prompt_advice
+    else:
+        prompt = prompt_no_advice
     # Prepare payload
     payload = {
         "inputs": prompt,

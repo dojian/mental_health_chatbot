@@ -1,5 +1,5 @@
 import psycopg2
-from src.connections.db import pool
+from src.connections.db import sync_pool
 from src.utils.config_setting import Settings
 
 settings = Settings()
@@ -44,5 +44,6 @@ if __name__ == "__main__":
     try:
         delete_database()
     finally:
-        # Close the connection pool
-        pool.close()
+        # Only close the pool if it exists
+        if sync_pool is not None:
+            sync_pool.close()

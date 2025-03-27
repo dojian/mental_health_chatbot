@@ -52,7 +52,18 @@ docker run -p 8001:8001 --network genzen-net \
   genzen-backend:<tag>
 ```
 
+
+
 ### Testing
+Running Tests
+```bash
+poetry run pytest -v
+poetry run pytest -v -m memory
+poetry run pytest -v -m unit
+poetry run pytest -v -m integration
+poetry run pytest -v --cov=src --cov-report=term-missing
+```
+
 #### Test Registration /auth/register with Postman
 post with body raw as json
 ```json

@@ -238,32 +238,15 @@ async def submit_pre_chat_survey(
     session: Session = Depends(get_session),
     current_user: GenZenUser = Depends(get_current_user),
 ):
-    # First check if the chat session exists
-    chat_session = session.query(ChatSession).filter(
-        ChatSession.session_id == survey.session_id,
-        ChatSession.user_id == current_user.id,
-    ).first()
-
-    # If chat session doesn't exist, create it
-    if not chat_session:
-        chat_session = ChatSession(
-            session_id=survey.session_id,
-            user_id=current_user.id,
-            session_name=None  # Can be updated later
-        )
-        session.add(chat_session)
-        session.commit()
-
-    # Now create the survey data
     survey_data = SurveyData(
-        user_id=current_user.id,
-        session_id=survey.session_id,
-        survey_type="pre",
-        survey_data=survey.model_dump()
+        user_id = current_user.id,
+        session_id = survey.session_id,
+        survey_type = "pre",
+        data = survey.model_dump()
     )
     session.add(survey_data)
     session.commit()
-    return {"message": "Pre-chat survey submitted successfully"}
+    return {"message": "Pre-chat survey submitted successfully"} 
 
 @router.post("/post-chat-survey")
 async def submit_post_chat_survey(

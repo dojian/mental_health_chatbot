@@ -1,6 +1,9 @@
 import boto3
 import json
 import numpy as np
+from src.utils.config_setting import Settings
+
+settings = Settings()
 
 pii_endpoint = "PII-endpoint"
 
@@ -42,23 +45,33 @@ def mask_text(text, entities):
 
 def anonymize_pii(text: str) -> str:
     """
-    Calls the SageMaker endpoint for PII classification and outputs user text with masked PII. 
+    Calls the SageMaker endpoint for PII classification and outputs user text with masked PII.
+    In debug mode, returns the original text without masking.
     """
-    sm_runtime = boto3.client('sagemaker-runtime', region_name='us-east-2')
-    
-    payload = {
-        "inputs": text
-    }
+    # In debug mode, return original text
+    if settings.DEBUG:
+        return text
+        
+    try:
+        sm_runtime = boto3.client('sagemaker-runtime', region_name='us-east-2')
+        
+        payload = {
+            "inputs": text
+        }
 
-    response = sm_runtime.invoke_endpoint(
-        EndpointName=pii_endpoint, 
-        ContentType='application/json', 
-        Body=json.dumps(payload).encode('utf-8')
-    )    
+        response = sm_runtime.invoke_endpoint(
+            EndpointName=pii_endpoint, 
+            ContentType='application/json', 
+            Body=json.dumps(payload).encode('utf-8')
+        )    
 
-    result = json.loads(response["Body"].read().decode("utf-8"))
+        result = json.loads(response["Body"].read().decode("utf-8"))
 
-    return mask_text(text, result)
+        return mask_text(text, result)
+    except Exception as e:
+        print(f"Error in PII masking: {e}")
+        # If there's an error, return original text
+        return text
 
 if __name__ == "__main__": 
 

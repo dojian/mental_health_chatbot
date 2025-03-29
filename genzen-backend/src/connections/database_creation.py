@@ -9,13 +9,14 @@ def delete_database():
     Reset the database.
     """
     commands_drop = [
-        "DROP TABLE IF EXISTS chathistory CASCADE",
         "DROP TABLE IF EXISTS chatsession CASCADE",
         "DROP TABLE IF EXISTS checkpoint_blobs CASCADE",
         "DROP TABLE IF EXISTS checkpoint_migrations CASCADE",
         "DROP TABLE IF EXISTS checkpoint_writes CASCADE",
         "DROP TABLE IF EXISTS checkpoints CASCADE",
+        "DROP TABLE IF EXISTS chathistory CASCADE",
         "DROP TABLE IF EXISTS genzenuser CASCADE",
+        "DROP TABLE IF EXISTS memoryfact CASCADE",
         "DROP TABLE IF EXISTS store CASCADE",
         "DROP TABLE IF EXISTS store_migrations CASCADE",
         "DROP TABLE IF EXISTS survey CASCADE",

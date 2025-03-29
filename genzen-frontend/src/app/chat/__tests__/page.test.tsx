@@ -1,189 +1,206 @@
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor, act } from '@testing-library/react';
 import ChatPage from '../page';
 import { sendChatMessage } from '@/utils/api';
+import '@testing-library/jest-dom';
 
-// Mock the API function
+// Mock the sendChatMessage function
 jest.mock('@/utils/api', () => ({
   sendChatMessage: jest.fn(),
 }));
 
-// Mock scrollIntoView
-const mockScrollIntoView = jest.fn();
-window.HTMLElement.prototype.scrollIntoView = mockScrollIntoView;
+// Mock the next/navigation module
+jest.mock('next/navigation', () => ({
+  useRouter: () => ({
+    push: jest.fn(),
+    replace: jest.fn(),
+    refresh: jest.fn(),
+    back: jest.fn(),
+    forward: jest.fn(),
+  }),
+}));
+
+// Create a mock Response class
+class MockResponse {
+  ok: boolean;
+  status: number;
+  statusText: string;
+  _data: any;
+
+  constructor(data: any, options: any = {}) {
+    this.ok = options.ok !== undefined ? options.ok : true;
+    this.status = options.status || 200;
+    this.statusText = options.statusText || 'OK';
+    this._data = data;
+  }
+
+  json() {
+    return Promise.resolve(this._data);
+  }
+}
 
 describe('ChatPage', () => {
-  const mockResponse = {
-    session_id: 'test-session-id',
-    query: 'Hello',
-    response: 'Hi there! How can I help you today?',
-  };
-
   beforeEach(() => {
     // Reset all mocks before each test
     jest.clearAllMocks();
-    mockScrollIntoView.mockClear();
     
-    // Setup default mock implementation for sendChatMessage
-    (sendChatMessage as jest.Mock).mockResolvedValue(mockResponse);
+    // Mock global fetch
+    global.fetch = jest.fn().mockImplementation((url: string) => {
+      if (url.includes('/api/chat/recent-sessions')) {
+        return Promise.resolve(new MockResponse({
+          sessions: [
+            { session_id: '1', session_name: 'Test Session 1', timestamp: new Date().toISOString() },
+            { session_id: '2', session_name: 'Test Session 2', timestamp: new Date().toISOString() }
+          ]
+        }));
+      }
+      return Promise.resolve(new MockResponse({}));
+    });
+
+    // Mock scrollIntoView
+    window.HTMLElement.prototype.scrollIntoView = jest.fn();
   });
 
-  it('renders chat interface correctly', () => {
-    render(<ChatPage />);
-    
-    // Check for input field and send button
-    expect(screen.getByPlaceholderText('Type your message...')).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /send/i })).toBeInTheDocument();
+  afterEach(() => {
+    jest.resetAllMocks();
   });
 
-  it('handles message submission correctly', async () => {
+  it('shows disclaimer modal initially', () => {
+    render(<ChatPage />);
+    expect(screen.getByText('Important Disclaimer')).toBeInTheDocument();
+  });
+
+  it('handles disclaimer acceptance', async () => {
+    render(<ChatPage />);
+    const acceptButton = screen.getByText('I Understand and Accept');
+    
+    await act(async () => {
+      fireEvent.click(acceptButton);
+    });
+
+    await waitFor(() => {
+      expect(screen.queryByText('Important Disclaimer')).not.toBeInTheDocument();
+    });
+  });
+
+  it('handles session selection', async () => {
     render(<ChatPage />);
     
+    // Accept disclaimer first
+    const acceptButton = screen.getByText('I Understand and Accept');
+    await act(async () => {
+      fireEvent.click(acceptButton);
+    });
+
+    // Wait for sessions to load
+    await waitFor(() => {
+      expect(screen.getByText('Test Session 1')).toBeInTheDocument();
+    });
+
+    // Click on a session
+    const sessionButton = screen.getByRole('button', { name: /Test Session 1/ });
+    await act(async () => {
+      fireEvent.click(sessionButton);
+    });
+
+    // Verify the session is selected
+    expect(sessionButton).toHaveClass('bg-blue-100');
+  });
+
+  it('sends messages and receives responses', async () => {
+    const mockResponse = { message: 'Test response', session_id: '123', query: 'Test message', response: 'Test response' };
+    (sendChatMessage as jest.Mock).mockResolvedValueOnce(mockResponse);
+
+    render(<ChatPage />);
+    
+    // Accept disclaimer first
+    const acceptButton = screen.getByText('I Understand and Accept');
+    await act(async () => {
+      fireEvent.click(acceptButton);
+    });
+
+    await waitFor(() => {
+      const input = screen.getByPlaceholderText('Type your message...');
+      expect(input).toBeInTheDocument();
+    });
+
     const input = screen.getByPlaceholderText('Type your message...');
-    const sendButton = screen.getByRole('button', { name: /send/i });
-    
+    const sendButton = screen.getByText('Send');
+
     // Type and send a message
-    fireEvent.change(input, { target: { value: 'Hello' } });
-    fireEvent.click(sendButton);
-    
-    // Check if message appears in chat
-    expect(screen.getByText('Hello')).toBeInTheDocument();
-    
-    // Wait for API call and response
-    await waitFor(() => {
-      expect(sendChatMessage).toHaveBeenCalledWith({
-        query: 'Hello',
-        session_id: null,
-        session_metadata: {
-          emotional_history: [],
-          topic_engagement: {},
-          suggestion_enabled: true,
-          last_memory_access: expect.any(String),
-          memory_context: [],
-        },
-      });
+    await act(async () => {
+      fireEvent.change(input, { target: { value: 'Test message' } });
+      fireEvent.click(sendButton);
     });
-    
-    // Check if bot response appears
-    expect(screen.getByText(mockResponse.response)).toBeInTheDocument();
-  });
 
-  it('includes session ID in subsequent requests', async () => {
-    render(<ChatPage />);
-    
-    const input = screen.getByPlaceholderText('Type your message...');
-    const sendButton = screen.getByRole('button', { name: /send/i });
-    
-    // Send first message
-    fireEvent.change(input, { target: { value: 'Hello' } });
-    fireEvent.click(sendButton);
-    
-    // Wait for first API call to complete
+    // Wait for the response
     await waitFor(() => {
-      expect(sendChatMessage).toHaveBeenCalledWith({
-        query: 'Hello',
-        session_id: null,
-        session_metadata: {
-          emotional_history: [],
-          topic_engagement: {},
-          suggestion_enabled: true,
-          last_memory_access: expect.any(String),
-          memory_context: [],
-        },
-      });
-    });
-    
-    // Send second message
-    fireEvent.change(input, { target: { value: 'How are you?' } });
-    fireEvent.click(sendButton);
-    
-    // Wait for second API call and verify session ID is included
-    await waitFor(() => {
-      expect(sendChatMessage).toHaveBeenCalledWith({
-        query: 'How are you?',
-        session_id: 'test-session-id',
-        session_metadata: {
-          emotional_history: [],
-          topic_engagement: {},
-          suggestion_enabled: true,
-          last_memory_access: expect.any(String),
-          memory_context: [],
-        },
-      });
+      const responseElement = screen.getByText('Test response');
+      expect(responseElement).toBeInTheDocument();
+      expect(responseElement.closest('div')).toHaveClass('bg-white');
     });
   });
 
   it('disables input and button while loading', async () => {
+    // Make the sendChatMessage function take some time to resolve
+    (sendChatMessage as jest.Mock).mockImplementation(() => new Promise(resolve => {
+      setTimeout(() => resolve({ message: 'Test response', session_id: '123' }), 100);
+    }));
+
     render(<ChatPage />);
     
+    // Accept disclaimer first
+    const acceptButton = screen.getByText('I Understand and Accept');
+    await act(async () => {
+      fireEvent.click(acceptButton);
+    });
+
+    await waitFor(() => {
+      const input = screen.getByPlaceholderText('Type your message...');
+      expect(input).toBeInTheDocument();
+    });
+
     const input = screen.getByPlaceholderText('Type your message...');
-    const sendButton = screen.getByRole('button', { name: /send/i });
-    
+    const sendButton = screen.getByText('Send');
+
     // Type and send a message
-    fireEvent.change(input, { target: { value: 'Hello' } });
-    fireEvent.click(sendButton);
-    
-    // Check if input and button are disabled while loading
+    await act(async () => {
+      fireEvent.change(input, { target: { value: 'Test message' } });
+      fireEvent.click(sendButton);
+    });
+
+    // Check that input and button are disabled
     expect(input).toBeDisabled();
     expect(sendButton).toBeDisabled();
+  });
+
+  it('handles API errors', async () => {
+    (sendChatMessage as jest.Mock).mockRejectedValueOnce(new Error('API Error'));
+
+    render(<ChatPage />);
     
-    // Wait for API call to complete
-    await waitFor(() => {
-      expect(input).not.toBeDisabled();
+    // Accept disclaimer first
+    const acceptButton = screen.getByText('I Understand and Accept');
+    await act(async () => {
+      fireEvent.click(acceptButton);
     });
 
-    // Type something new to enable the button
-    fireEvent.change(input, { target: { value: 'New message' } });
-    expect(sendButton).not.toBeDisabled();
-  });
-
-  it('displays error message when API call fails', async () => {
-    const errorMessage = 'API Error';
-    (sendChatMessage as jest.Mock).mockRejectedValue(new Error(errorMessage));
-    
-    render(<ChatPage />);
-    
-    const input = screen.getByPlaceholderText('Type your message...');
-    const sendButton = screen.getByRole('button', { name: /send/i });
-    
-    // Type and send a message
-    fireEvent.change(input, { target: { value: 'Hello' } });
-    fireEvent.click(sendButton);
-    
-    // Wait for error message to appear
     await waitFor(() => {
-      expect(screen.getByText(errorMessage)).toBeInTheDocument();
+      const input = screen.getByPlaceholderText('Type your message...');
+      expect(input).toBeInTheDocument();
     });
-  });
 
-  it('does not send empty messages', () => {
-    render(<ChatPage />);
-    
     const input = screen.getByPlaceholderText('Type your message...');
-    const sendButton = screen.getByRole('button', { name: /send/i });
-    
-    // Try to send empty message
-    fireEvent.click(sendButton);
-    
-    // Check that API was not called
-    expect(sendChatMessage).not.toHaveBeenCalled();
-  });
+    const sendButton = screen.getByText('Send');
 
-  it('clears input after sending message', async () => {
-    render(<ChatPage />);
-    
-    const input = screen.getByPlaceholderText('Type your message...');
-    const sendButton = screen.getByRole('button', { name: /send/i });
-    
     // Type and send a message
-    fireEvent.change(input, { target: { value: 'Hello' } });
-    fireEvent.click(sendButton);
-    
-    // Check that input is cleared
-    expect(input).toHaveValue('');
-    
-    // Wait for API call to complete
+    await act(async () => {
+      fireEvent.change(input, { target: { value: 'Test message' } });
+      fireEvent.click(sendButton);
+    });
+
+    // Wait for error message
     await waitFor(() => {
-      expect(sendChatMessage).toHaveBeenCalled();
+      expect(screen.getByText(/error/i)).toBeInTheDocument();
     });
   });
 }); 

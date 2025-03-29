@@ -7,6 +7,8 @@ from langchain_openai import OpenAIEmbeddings
 from src.utils.config_setting import Settings
 import atexit
 import asyncio
+from psycopg.rows import dict_row
+
 settings = Settings()
 
 POSTGRES_CONN_STRING = f"postgresql://{settings.POSTGRES_USER}:{settings.POSTGRES_PASSWORD}@{settings.POSTGRES_HOST}:{settings.POSTGRES_PORT}/{settings.POSTGRES_DB}?sslmode=disable"
@@ -17,7 +19,8 @@ engine = create_engine(
 
 connection_kwargs = {
     "autocommit": True,
-    "prepare_threshold": 0
+    "prepare_threshold": 0,
+    "row_factory": dict_row
 }
 
 # Initialize variables that will be set up later
@@ -46,8 +49,9 @@ def create_db_and_tables():
 async def setup_checkpoint_and_memory_store():
     """
     Initialize the Postgres db for checkpointer and store.
+    Returns:
+        tuple: (memory_store, checkpointer)
     """
-    global sync_pool, async_pool, memory_store, checkpointer
     try:
         # Print connection parameters (obscuring password)
         conn_info = POSTGRES_CONN_STRING.replace(settings.POSTGRES_PASSWORD, "********")
@@ -79,36 +83,10 @@ async def setup_checkpoint_and_memory_store():
         # Initialize checkpointer with async pool
         print("Setting up checkpointer...")
         checkpointer = AsyncPostgresSaver(async_pool)
-        await checkpointer.setup()  # This will create necessary tables
+        await checkpointer.setup()
         print("Checkpointer initialized successfully.")
         
-        # Verify PostgresStore is working with a simple put/get operation
-        try:
-            print("Testing memory store with a simple operation...")
-            test_namespace = ("test_user", "test_facts")
-            test_id = "test_id"
-            test_data = {
-                "content": "Test message",
-                "timestamp": str(datetime.now())
-            }
-            
-            # Store test data
-            await memory_store.aput(test_namespace, test_id, test_data)
-            print("Successfully stored test data")
-            
-            # Try to retrieve the test item
-            retrieved = await memory_store.aget(test_namespace, test_id)
-            if retrieved:
-                print("Successfully retrieved test data")
-            else:
-                print("Warning: Could not retrieve test data")
-            
-            # Clean up test data
-            await memory_store.adelete(test_namespace, test_id)
-            print("Memory store verification complete")
-        except Exception as e:
-            print(f"Warning: Memory store verification failed: {e}")
-            raise
+        return memory_store, checkpointer
             
     except Exception as e:
         print(f"Error setting up memory systems: {e}")

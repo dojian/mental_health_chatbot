@@ -27,7 +27,7 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     
     ### Postgres ###
     create_db_and_tables()
-    setup_checkpoint_and_memory_store()
+    await setup_checkpoint_and_memory_store()
     logging.info(f"{datetime.now()}: LIFESPAN - Connected to Postgres")
     yield
 

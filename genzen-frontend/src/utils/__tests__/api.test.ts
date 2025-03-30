@@ -44,7 +44,7 @@ describe('sendChatMessage', () => {
 
     expect(Cookies.get).toHaveBeenCalledWith(env.jwtStorageKey);
     expect(global.fetch).toHaveBeenCalledWith(
-      'http://localhost:8001/v1/agent-chat',
+      `${env.apiUrl}/v1/agent-chat`,
       {
         method: 'POST',
         headers: {

@@ -2,7 +2,7 @@ import { ChatRequest, ChatResponse } from '@/types/chat';
 import { env } from './env';
 import Cookies from 'js-cookie';
 
-const API_BASE_URL = 'http://localhost:8001/v1';
+const API_BASE_URL = `${env.apiUrl}/v1`;
 
 export async function sendChatMessage(request: ChatRequest): Promise<ChatResponse> {
   console.log('Preparing chat message request:', JSON.stringify(request, null, 2));

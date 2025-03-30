@@ -4,8 +4,10 @@ import { useState, useRef, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { ChatMessage, ChatState, SessionMetadata } from '@/types/chat';
 import { sendChatMessage } from '@/utils/api';
+import { env } from '@/utils/env';
 import DisclaimerModal from '../layout-components/DisclaimerModal';
 import SessionSelector from '../layout-components/SessionSelector';
+import Cookies from 'js-cookie';
 
 export default function ChatPage() {
   const router = useRouter();
@@ -37,16 +39,22 @@ export default function ChatPage() {
 
   const handleDisclaimerAccept = async () => {
     try {
+      // Get the JWT token from cookies
+      const token = Cookies.get(env.jwtStorageKey);
+      
       // Submit pre-chat survey with disclaimer acceptance
-      const response = await fetch('/api/pre-chat-survey', {
+      const response = await fetch(`${env.apiUrl}/v1/pre-chat-survey`, {
         method: 'POST',
+        credentials: 'include',
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
         },
         body: JSON.stringify({
           emotional_intensity: 1,
           selected_topics: [],
           suggestions_enabled: true,
+          timestamp: new Date().toISOString(),
           user_disclaimer_accepted: true,
         }),
       });

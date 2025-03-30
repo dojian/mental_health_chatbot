@@ -11,7 +11,7 @@ export async function GET(request: NextRequest) {
     }
 
     console.log('Fetching recent sessions from backend...');
-    const response = await fetch('http://localhost:8001/v1/chat/recent-sessions?limit=5', {
+    const response = await fetch('http://localhost:8001/v1/chat/recent-sessions?limit=2', {
       headers: {
         'Authorization': authHeader,
       },

@@ -7,7 +7,9 @@ export interface Mission {
   title: string;
   mission: string;
   description: string;
-  audience: string[];
+  supported_topics: string;
+  supported_topics_list: string[];
+  disclaimer: string;
   features: Feature[];
 }
 

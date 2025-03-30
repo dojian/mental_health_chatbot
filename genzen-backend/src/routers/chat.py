@@ -123,36 +123,13 @@ async def agent_chat(
                 )
             session_id = request.session_id
         else:
-            # Try to get the most recent session
-            recent_session = (
+            # Create new session if session_name is provided or no recent session exists
+            if request.session_name or not (
                 session.query(ChatSession)
                 .filter(ChatSession.user_id == current_user.id)
                 .order_by(ChatSession.last_interaction.desc())
                 .first()
-            )
-            
-            if recent_session:
-                # Ensure last_interaction is timezone-aware
-                last_interaction = recent_session.last_interaction
-                if last_interaction.tzinfo is None:
-                    last_interaction = last_interaction.replace(tzinfo=timezone.utc)
-                
-                if (current_time - last_interaction) < timedelta(hours=24):
-                    # Use recent session if it's less than 24 hours old
-                    chat_session = recent_session
-                    session_id = chat_session.session_id
-                else:
-                    # Create new session
-                    session_id = f"{current_user.id}-{uuid.uuid4().hex}"
-                    chat_session = ChatSession(
-                        user_id=current_user.id,
-                        session_id=session_id,
-                        session_name=request.session_name or "New Chat",
-                        last_interaction=current_time
-                    )
-                    session.add(chat_session)
-                    session.commit()
-            else:
+            ):
                 # Create new session
                 session_id = f"{current_user.id}-{uuid.uuid4().hex}"
                 chat_session = ChatSession(
@@ -163,6 +140,16 @@ async def agent_chat(
                 )
                 session.add(chat_session)
                 session.commit()
+            else:
+                # Use most recent session if no new session_name provided
+                recent_session = (
+                    session.query(ChatSession)
+                    .filter(ChatSession.user_id == current_user.id)
+                    .order_by(ChatSession.last_interaction.desc())
+                    .first()
+                )
+                chat_session = recent_session
+                session_id = chat_session.session_id
         
         # Update last interaction time
         chat_session.last_interaction = current_time

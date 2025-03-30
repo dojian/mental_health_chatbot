@@ -1,0 +1,37 @@
+team:
+  - name: Lit Phansiri
+    role: Full Stack Data Scientist
+    image: /team/genzen_team_lit.jpg
+    bio: >
+      As a Marine Corps Cyberspace Warfare Officer and Data Scientist, I blend military 
+      leadership with technical expertise to create innovative AI solutions. My background 
+      in cybersecurity and current work with LLM technologies drives my passion for 
+      developing systems that solve complex challenges for organizations and society.
+    links:
+      github: https://github.com/phansiri
+      linkedin: https://www.linkedin.com/in/litthideth-phansiri-6b79b098/
+      portfolio: https://phansiri.com
+
+  - name: Dong An Jian
+    role: AI/ML Data Scientist
+    image: /team/genzen_team_dong.jpeg
+    bio: >
+      Specializing in natural language processing and machine learning, I work on making
+      our AI interactions more human-like and empathetic. My goal is to create technology
+      that truly understands and supports users' emotional needs.
+    links:
+      github: https://github.com/dojian
+      linkedin: https://linkedin.com/in/dev2
+      portfolio: https://dev2.com
+
+  - name: Jordan Fan
+    role: AI/ML Data Scientist
+    image: /team/dev3.jpg
+    bio: >
+      With a focus on user-centered design, I ensure that GenZen provides a calming
+      and intuitive experience. My background in both design and development helps
+      create seamless interactions that prioritize user well-being.
+    links:
+      github: https://github.com/dev3
+      linkedin: https://linkedin.com/in/dev3
+      portfolio: https://dev3.com 

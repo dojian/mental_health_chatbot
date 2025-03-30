@@ -8,7 +8,9 @@ export default function Home() {
                         Your AI-powered mental health support companion
                     </h2>
                     <p className="text-lg sm:text-xl text-gray-700 max-w-2xl mx-auto">
-                        Available 24/7 to provide emotional support and guidance when you need it most.
+                        GenZen is here to listen and support you through your college stresses and anxiety. 
+                        We offer assistance in helping you find the right study habits, deciding your major, 
+                        building your career, and more. 
                     </p>
                     <div className="mt-8 space-y-4">
                         <h3 className="text-xl sm:text-2xl font-semibold text-gray-800">Why Choose GenZen?</h3>

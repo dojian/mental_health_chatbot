@@ -1,0 +1,25 @@
+title: About GenZen
+mission: >
+  GenZen is an innovative AI-powered mental health support platform designed to provide 24/7 assistance
+  to those seeking emotional support and guidance. Our mission is to make mental health support
+  accessible, confidential, and helpful for everyone.
+
+description: >
+  Using advanced artificial intelligence, we offer a safe space for users to express their thoughts
+  and feelings, receive supportive responses, and access helpful resources for mental well-being.
+
+audience:
+  - Students dealing with academic stress and anxiety
+  - Young professionals navigating work-life balance
+  - Anyone seeking immediate emotional support
+  - Individuals looking for a confidential space to express themselves
+
+features:
+  - title: 24/7 AI-powered emotional support
+    description: Get support anytime, anywhere, whenever you need someone to talk to.
+  - title: Confidential and secure conversations
+    description: Your privacy is our priority. All conversations are encrypted and secure.
+  - title: Evidence-based resources
+    description: Access curated mental health resources and proven coping strategies.
+  - title: Personalized support
+    description: Receive tailored responses that understand your unique situation. 

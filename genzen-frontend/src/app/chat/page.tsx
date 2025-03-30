@@ -64,6 +64,7 @@ export default function ChatPage() {
   };
 
   const handleSessionSelect = (sessionId: string | null) => {
+    console.log('Session selected:', sessionId);
     setChatState(prev => ({
       ...prev,
       sessionId,
@@ -110,16 +111,23 @@ export default function ChatPage() {
 
       console.log('Preparing chat request with metadata:', JSON.stringify(sessionMetadata, null, 2));
 
-      // For new sessions, use the first message as the session name
-      const sessionName = chatState.sessionId ? undefined : inputMessage.slice(0, 50);
-      console.log('Setting session name for new session:', sessionName);
-
-      const response = await sendChatMessage({
+      // Prepare the request payload
+      const requestPayload: any = {
         query: inputMessage,
-        session_id: chatState.sessionId,
-        session_name: sessionName,
         session_metadata: sessionMetadata,
-      });
+      };
+
+      // Only include session_id if we have a current session
+      if (chatState.sessionId) {
+        requestPayload.session_id = chatState.sessionId;
+      } else {
+        // For new sessions, use the first message as the session name
+        requestPayload.session_name = inputMessage.slice(0, 100); // Limit to 50 chars
+      }
+
+      console.log('Sending request payload:', JSON.stringify(requestPayload, null, 2));
+
+      const response = await sendChatMessage(requestPayload);
 
       console.log('Received response from sendChatMessage:', JSON.stringify(response, null, 2));
 
@@ -131,12 +139,15 @@ export default function ChatPage() {
       };
 
       // Update chat state with new session ID and messages
-      setChatState(prev => ({
-        ...prev,
-        messages: [...prev.messages, botMessage],
-        sessionId: response.session_id,
-        isLoading: false,
-      }));
+      setChatState(prev => {
+        console.log('Updating chat state with new session ID:', response.session_id);
+        return {
+          ...prev,
+          messages: [...prev.messages, botMessage],
+          sessionId: response.session_id,
+          isLoading: false,
+        };
+      });
 
       // Force a refresh of the session list
       console.log('Dispatching session update event...');

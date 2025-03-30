@@ -15,34 +15,6 @@ router = APIRouter()
 model = llm
 model_with_tools = llm_with_tools
 
-@router.get("/chat/sessions")
-async def list_chat_sessions(session = Depends(get_session), current_user = Depends(get_current_user)):
-    """
-    List all chat sessions for the current user."
-    """
-    chat_sessions = (
-        session.query(ChatSession)
-        .filter(ChatSession.user_id == current_user.id)
-        .all()
-    )
-    session_list = []
-    for chat_session in chat_sessions:
-        first_message = (
-            session.query(ChatHistory)
-            .filter(
-                ChatHistory.session_id == chat_session.session_id,
-                ChatHistory.role == "user"
-            )
-            .order_by(ChatHistory.timestamp)
-            .first()
-        )
-        session_list.append({
-            "session_id": chat_session.session_id,
-            "created_at": chat_session.created_at,
-            "first_query": first_message.message if first_message else "No query yet"
-        })
-    return session_list
-
 @router.get("/chat/recent-sessions")
 async def get_recent_sessions(
     limit: int = 5,

@@ -54,9 +54,9 @@ async def test_db(event_loop):
     # Setup tables and memory systems
     from src.connections.db import create_db_and_tables, setup_checkpoint_and_memory_store
     create_db_and_tables()
-    await setup_checkpoint_and_memory_store()
+    memory_store, checkpointer = await setup_checkpoint_and_memory_store()
 
-    yield test_engine
+    yield test_engine, memory_store, checkpointer
 
     # Cleanup
     delete_database()
@@ -102,25 +102,18 @@ async def auth_client(event_loop, test_db):
 @pytest.fixture(scope="function")
 def db_session(test_db):
     """Create a fresh database session for each test"""
-    with Session(test_db) as session:
+    with Session(test_db[0]) as session:
         yield session
         session.rollback()
 
 @pytest_asyncio.fixture(scope="function")
 async def memory_store_fixture(test_db):
     """Provide access to memory store for testing"""
-    # Wait for memory store to be initialized
-    while memory_store is None:
-        await asyncio.sleep(0.1)
+    _, memory_store, _ = test_db
     yield memory_store
 
 @pytest_asyncio.fixture(scope="function")
 async def checkpointer_fixture(test_db):
     """Provide access to checkpointer for testing"""
-    print("Waiting for checkpointer to be initialized...")
-    # Wait for checkpointer to be initialized
-    while checkpointer is None:
-        print("Checkpointer is None, waiting...")
-        await asyncio.sleep(0.1)
-    print("Checkpointer initialized successfully")
+    _, _, checkpointer = test_db
     yield checkpointer 

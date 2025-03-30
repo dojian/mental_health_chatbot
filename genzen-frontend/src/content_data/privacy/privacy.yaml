@@ -1,42 +1,42 @@
 title: Privacy Policy
-lastUpdated: "2024-03-20"
+lastUpdated: "2025-03-30"
 
 sections:
   - title: Introduction
     content: |
-      At GenZen, we take your privacy seriously. This Privacy Policy explains how we collect, use, disclose, and safeguard your information when you use our mental health chatbot service.
+      Privacy is a top concern for GenZen. Your chat history will never be shared, sold, or 
+      accessible to third parties or other users; only you can access your chat conversations. 
+      While we encourage you to avoid inserting any personal information when interacting with 
+      the chatbot, we have additional measures in place to automatically anonymize personal 
+      identifiable information before being processed by our AI models, ensuring that no 
+      sensitive data is exposed to open-source systems. Our commitment is to provide a secure 
+      and private space for you to engage with our chatbot with confidence. 
 
   - title: Information We Collect
     content: |
       We collect information that you provide directly to us, including:
       - Account information (username, email)
-      - Chat history and conversations
+      - Chat history and conversations (redacted pii for added privacy)
       - Usage data and analytics
-      - Technical information (IP address, browser type, device information)
 
   - title: How We Use Your Information
     content: |
       We use the collected information to:
-      - Provide and maintain our service
-      - Improve and personalize your experience
-      - Process your transactions
-      - Send you important updates and notifications
+      - Improve and personalize your experience for each user
       - Comply with legal obligations
 
   - title: Data Security
     content: |
       We implement appropriate security measures to protect your personal information, including:
       - Encryption of data in transit and at rest
-      - Regular security assessments
+      - Regular security assessments (via CI/CD pipeline)
       - Access controls and authentication
       - Secure data storage practices
 
   - title: Data Sharing
     content: |
       We do not sell your personal information. We may share your data with:
-      - Service providers who assist in our operations
-      - Law enforcement when required by law
-      - Other users only with your explicit consent
+      - Law enforcement when required by law - user will be notified if this occurs
 
   - title: Your Rights
     content: |
@@ -44,11 +44,9 @@ sections:
       - Access your personal data
       - Correct inaccurate data
       - Request deletion of your data
-      - Opt-out of marketing communications
       - Export your data
 
   - title: Contact Us
     content: |
       If you have any questions about this Privacy Policy, please contact us at:
-      Email: privacy@genzen.com
-      Address: [Your Company Address] 
+      Email: <email coming soon>

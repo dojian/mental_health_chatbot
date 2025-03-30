@@ -55,7 +55,11 @@ async def setup_checkpoint_and_memory_store():
     try:
         # Print connection parameters (obscuring password)
         conn_info = POSTGRES_CONN_STRING.replace(settings.POSTGRES_PASSWORD, "********")
-        print(f"Setting up memory systems with connection: {conn_info}")
+
+        if settings.DEBUG:
+            print(f"Setting up memory systems with connection: {conn_info}")
+        else:
+            print(f"Setting up memory systems to database")
         
         # Initialize connection pools
         print("Setting up connection pools...")

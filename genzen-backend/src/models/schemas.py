@@ -83,4 +83,17 @@ class PreChatSurveyCreate(SurveyResponseBase):
 class PostChatSurveyCreate(SurveyResponseBase):
     feedback: Optional[str]
 
+# Checkpoint-specific models (reusing existing structures where possible)
+class CheckpointConfig(BaseModel):
+    configurable: Dict[str, str]
+
+class CheckpointMetadata(BaseModel):
+    version: int
+    timestamp: datetime
+
+    def model_dump(self, *args, **kwargs):
+        d = super().model_dump(*args, **kwargs)
+        d['timestamp'] = d['timestamp'].isoformat()
+        return d
+
 

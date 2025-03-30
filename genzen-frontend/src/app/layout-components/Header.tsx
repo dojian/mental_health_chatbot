@@ -5,17 +5,26 @@ import { usePathname } from 'next/navigation';
 import { env } from '@/utils/env';
 import Cookies from 'js-cookie';
 import { useAuth } from '@/contexts/AuthContext';
+import { logout } from '@/utils/auth';
 
 export default function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const pathname = usePathname();
   const { isAuthenticated, setIsAuthenticated } = useAuth();
 
-  const handleSignOut = () => {
-    Cookies.remove(env.jwtStorageKey);
-    setIsAuthenticated(false);
-    setIsMenuOpen(false);
-    window.location.href = '/';
+  const handleSignOut = async () => {
+    try {
+      await logout();
+      setIsAuthenticated(false);
+      setIsMenuOpen(false);
+    } catch (error) {
+      console.error('Error during logout:', error);
+      // Fallback to local logout if the server call fails
+      Cookies.remove(env.jwtStorageKey);
+      setIsAuthenticated(false);
+      setIsMenuOpen(false);
+      window.location.href = '/';
+    }
   };
 
   const handleLinkClick = () => {

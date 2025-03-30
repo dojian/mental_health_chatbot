@@ -1,9 +1,10 @@
 import { env } from './env';
+import Cookies from 'js-cookie';
 
 export async function logout() {
     try {
-        // Get the token from localStorage
-        const token = localStorage.getItem(env.jwtStorageKey);
+        // Get the token from cookies
+        const token = Cookies.get(env.jwtStorageKey);
         if (!token) return;
 
         // Call the logout endpoint
@@ -14,8 +15,8 @@ export async function logout() {
             },
         });
     } finally {
-        // Always remove the token from localStorage
-        localStorage.removeItem(env.jwtStorageKey);
+        // Always remove the token from cookies
+        Cookies.remove(env.jwtStorageKey);
         // Redirect to login page
         window.location.href = '/login';
     }

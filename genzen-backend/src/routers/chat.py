@@ -7,6 +7,8 @@ from src.models.schemas import ChatRequest, PreChatSurveyCreate, PostChatSurveyC
 from src.connections.db import get_session
 from src.utils.auth_utils import get_current_user
 from src.agents.agent import graph, llm, llm_with_tools
+from typing import List, Optional
+from datetime import datetime, timedelta, timezone
 
 router = APIRouter()
 
@@ -41,6 +43,58 @@ async def list_chat_sessions(session = Depends(get_session), current_user = Depe
         })
     return session_list
 
+@router.get("/chat/recent-sessions")
+async def get_recent_sessions(
+    limit: int = 5,
+    session: Session = Depends(get_session),
+    current_user: GenZenUser = Depends(get_current_user)
+):
+    """
+    Get the most recent chat sessions for the current user.
+    Returns a list of sessions with their names and timestamps.
+    """
+    recent_sessions = (
+        session.query(ChatSession)
+        .filter(ChatSession.user_id == current_user.id)
+        .order_by(ChatSession.last_interaction.desc())
+        .limit(limit)
+        .all()
+    )
+    
+    return [{
+        "session_id": chat_session.session_id,
+        "session_name": chat_session.session_name or "Unnamed Session",
+        "last_interaction": chat_session.last_interaction,
+        "created_at": chat_session.created_at
+    } for chat_session in recent_sessions]
+
+@router.get("/chat/session/{session_id}")
+async def get_session_details(
+    session_id: str,
+    session: Session = Depends(get_session),
+    current_user: GenZenUser = Depends(get_current_user)
+):
+    """
+    Get details of a specific chat session.
+    """
+    chat_session = session.query(ChatSession).filter(
+        ChatSession.session_id == session_id,
+        ChatSession.user_id == current_user.id
+    ).first()
+    
+    if not chat_session:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Chat session not found"
+        )
+    
+    return {
+        "session_id": chat_session.session_id,
+        "session_name": chat_session.session_name or "Unnamed Session",
+        "last_interaction": chat_session.last_interaction,
+        "created_at": chat_session.created_at
+    }
+
 @router.post("/agent-chat")
 async def agent_chat(
     request: ChatRequest,
@@ -49,9 +103,13 @@ async def agent_chat(
 ):
     """
     Handles user queries using the langgraph agent.
+    If no session_id is provided, it will:
+    1. Use the latest session if available
+    2. Create a new session if no sessions exist
     """
     try:
-
+        current_time = datetime.now(timezone.utc)
+        
         # Step 1: Handle session management
         if request.session_id:
             chat_session = session.query(ChatSession).filter(
@@ -65,14 +123,37 @@ async def agent_chat(
                 )
             session_id = request.session_id
         else:
-            session_id = f"{current_user.id}-{uuid.uuid4().hex}"
-            chat_session = ChatSession(
-                user_id=current_user.id,
-                session_id=session_id,
-                session_name=request.session_name
-            )
-            session.add(chat_session)
-            session.commit()
+            # Create new session if session_name is provided or no recent session exists
+            if request.session_name or not (
+                session.query(ChatSession)
+                .filter(ChatSession.user_id == current_user.id)
+                .order_by(ChatSession.last_interaction.desc())
+                .first()
+            ):
+                # Create new session
+                session_id = f"{current_user.id}-{uuid.uuid4().hex}"
+                chat_session = ChatSession(
+                    user_id=current_user.id,
+                    session_id=session_id,
+                    session_name=request.session_name or "New Chat",
+                    last_interaction=current_time
+                )
+                session.add(chat_session)
+                session.commit()
+            else:
+                # Use most recent session if no new session_name provided
+                recent_session = (
+                    session.query(ChatSession)
+                    .filter(ChatSession.user_id == current_user.id)
+                    .order_by(ChatSession.last_interaction.desc())
+                    .first()
+                )
+                chat_session = recent_session
+                session_id = chat_session.session_id
+        
+        # Update last interaction time
+        chat_session.last_interaction = current_time
+        session.commit()
         
         # Retrieve existing chat history
         existing_messages = session.query(ChatHistory).filter(
@@ -80,7 +161,6 @@ async def agent_chat(
                 ChatHistory.timestamp).all()
 
         # Step 2: Format the message for the agent
-        # The agent expects a list of messages
         messages = [
             HumanMessage(content=msg.message) if msg.role == "user" else AIMessage(content=msg.message)
             for msg in existing_messages
@@ -90,13 +170,13 @@ async def agent_chat(
         # Step 2.1: Configure thread_id and user_id for memory
         config = {
             "configurable": {
-                "thread_id": session_id,  # For short-term memory (checkpointer)
-                "user_id": str(current_user.id),  # For long-term memory (store)
-                "checkpoint_ns": f"user_{current_user.id}",  # Optional namespace for checkpoints
+                "thread_id": session_id,
+                "user_id": str(current_user.id),
+                "checkpoint_ns": f"user_{current_user.id}",
                 "session_context": {
                     "session_id": session_id,
-                    "session_name": chat_session.session_name if hasattr(chat_session, "session_name") else None,
-                    "session_start": str(chat_session.created_at) if hasattr(chat_session, "created_at") else None
+                    "session_name": chat_session.session_name or "Unnamed Session",
+                    "session_start": str(chat_session.created_at)
                 }
             }
         }
@@ -113,6 +193,8 @@ async def agent_chat(
             user_id=current_user.id,
             role="user",
             message=request.query,
+            chat_metadata=request.session_metadata.model_dump() if request.session_metadata else {},
+            timestamp=current_time
         )
         
         assistant_message = ChatHistory(
@@ -120,6 +202,8 @@ async def agent_chat(
             user_id=current_user.id,
             role="assistant",
             message=assistant_msg_txt,
+            chat_metadata={},  # Empty metadata for assistant messages
+            timestamp=current_time
         )
         
         session.add_all([user_message, assistant_message])
@@ -127,6 +211,7 @@ async def agent_chat(
 
         return {
             "session_id": session_id,
+            "session_name": chat_session.session_name or "Unnamed Session",
             "query": request.query,
             "response": assistant_msg_txt,
         }

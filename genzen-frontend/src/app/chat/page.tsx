@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { ChatMessage, ChatState, SessionMetadata } from '@/types/chat';
 import { sendChatMessage } from '@/utils/api';
 import DisclaimerModal from '../layout-components/DisclaimerModal';
+import SessionSelector from '../layout-components/SessionSelector';
 
 export default function ChatPage() {
   const router = useRouter();
@@ -43,8 +44,7 @@ export default function ChatPage() {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          session_id: "string", // Required field, will be replaced by backend
-          emotional_intensity: 1, // Required field, default to 1
+          emotional_intensity: 1,
           selected_topics: [],
           suggestions_enabled: true,
           user_disclaimer_accepted: true,
@@ -56,19 +56,29 @@ export default function ChatPage() {
         throw new Error(errorData.error || 'Failed to submit pre-chat survey');
       }
 
-      // Even if the API call fails, we'll still show the chat interface
-      // since the user has accepted the disclaimer
       setShowDisclaimer(false);
     } catch (error) {
       console.error('Error submitting pre-chat survey:', error);
-      // Don't redirect to privacy page, just show the chat interface
       setShowDisclaimer(false);
     }
+  };
+
+  const handleSessionSelect = (sessionId: string | null) => {
+    console.log('Session selected:', sessionId);
+    setChatState(prev => ({
+      ...prev,
+      sessionId,
+      messages: [], // Clear messages when switching sessions
+      error: null,
+    }));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!inputMessage.trim() || chatState.isLoading) return;
+
+    console.log('Starting message submission with input:', inputMessage);
+    console.log('Current session ID:', chatState.sessionId);
 
     const userMessage: ChatMessage = {
       query: inputMessage,
@@ -87,19 +97,39 @@ export default function ChatPage() {
     setInputMessage('');
 
     try {
+      const now = new Date();
+      // Format the date as YYYY-MM-DD
+      const formattedDate = now.toISOString().split('T')[0];
+
       const sessionMetadata: SessionMetadata = {
         emotional_history: [],
         topic_engagement: {},
         suggestion_enabled: true,
-        last_memory_access: new Date().toISOString(),
+        last_memory_access: formattedDate,
         memory_context: [],
       };
 
-      const response = await sendChatMessage({
+      console.log('Preparing chat request with metadata:', JSON.stringify(sessionMetadata, null, 2));
+
+      // Prepare the request payload
+      const requestPayload: any = {
         query: inputMessage,
-        session_id: chatState.sessionId,
         session_metadata: sessionMetadata,
-      });
+      };
+
+      // Only include session_id if we have a current session
+      if (chatState.sessionId) {
+        requestPayload.session_id = chatState.sessionId;
+      } else {
+        // For new sessions, use the first message as the session name
+        requestPayload.session_name = inputMessage.slice(0, 100); // Limit to 50 chars
+      }
+
+      console.log('Sending request payload:', JSON.stringify(requestPayload, null, 2));
+
+      const response = await sendChatMessage(requestPayload);
+
+      console.log('Received response from sendChatMessage:', JSON.stringify(response, null, 2));
 
       const botMessage: ChatMessage = {
         query: response.query,
@@ -108,13 +138,31 @@ export default function ChatPage() {
         isUser: false,
       };
 
-      setChatState(prev => ({
-        ...prev,
-        messages: [...prev.messages, botMessage],
-        sessionId: response.session_id,
-        isLoading: false,
-      }));
+      // Update chat state with new session ID and messages
+      setChatState(prev => {
+        console.log('Updating chat state with new session ID:', response.session_id);
+        return {
+          ...prev,
+          messages: [...prev.messages, botMessage],
+          sessionId: response.session_id,
+          isLoading: false,
+        };
+      });
+
+      // Force a refresh of the session list
+      console.log('Dispatching session update event...');
+      const event = new CustomEvent('sessionUpdated', {
+        detail: { sessionId: response.session_id }
+      });
+      window.dispatchEvent(event);
+      
+      // Also fetch sessions directly after a short delay to ensure backend has processed the update
+      setTimeout(() => {
+        console.log('Triggering delayed session refresh...');
+        window.dispatchEvent(new CustomEvent('sessionUpdated'));
+      }, 1000);
     } catch (error) {
+      console.error('Error in handleSubmit:', error);
       setChatState(prev => ({
         ...prev,
         isLoading: false,
@@ -129,6 +177,10 @@ export default function ChatPage() {
 
   return (
     <div className="flex flex-col h-[calc(100vh-12rem)]">
+      <SessionSelector
+        onSessionSelect={handleSessionSelect}
+        currentSessionId={chatState.sessionId}
+      />
       <div className="flex-1 overflow-y-auto p-4 space-y-4">
         {chatState.messages.map((message, index) => (
           <div

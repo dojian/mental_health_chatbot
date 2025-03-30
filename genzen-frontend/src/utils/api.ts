@@ -5,12 +5,17 @@ import Cookies from 'js-cookie';
 const API_BASE_URL = 'http://localhost:8001/v1';
 
 export async function sendChatMessage(request: ChatRequest): Promise<ChatResponse> {
+  console.log('Preparing chat message request:', JSON.stringify(request, null, 2));
+  
   const token = Cookies.get(env.jwtStorageKey);
+  console.log('Auth token present:', !!token);
   
   if (!token) {
     throw new Error('No authentication token found');
   }
 
+  console.log('Sending request to:', `${API_BASE_URL}/agent-chat`);
+  
   const response = await fetch(`${API_BASE_URL}/agent-chat`, {
     method: 'POST',
     headers: {
@@ -20,9 +25,16 @@ export async function sendChatMessage(request: ChatRequest): Promise<ChatRespons
     body: JSON.stringify(request),
   });
 
+  console.log('Response status:', response.status);
+  
   if (!response.ok) {
-    throw new Error(`HTTP error! status: ${response.status}`);
+    const errorData = await response.json();
+    console.error('Error response:', errorData);
+    throw new Error(errorData.detail || `HTTP error! status: ${response.status}`);
   }
 
-  return response.json();
+  const data = await response.json();
+  console.log('Success response:', JSON.stringify(data, null, 2));
+  
+  return data;
 } 

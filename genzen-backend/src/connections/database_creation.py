@@ -1,5 +1,5 @@
 import psycopg2
-from src.connections.db import pool
+from src.connections.db import sync_pool
 from src.utils.config_setting import Settings
 
 settings = Settings()
@@ -9,13 +9,14 @@ def delete_database():
     Reset the database.
     """
     commands_drop = [
-        "DROP TABLE IF EXISTS chathistory CASCADE",
         "DROP TABLE IF EXISTS chatsession CASCADE",
         "DROP TABLE IF EXISTS checkpoint_blobs CASCADE",
         "DROP TABLE IF EXISTS checkpoint_migrations CASCADE",
         "DROP TABLE IF EXISTS checkpoint_writes CASCADE",
         "DROP TABLE IF EXISTS checkpoints CASCADE",
+        "DROP TABLE IF EXISTS chathistory CASCADE",
         "DROP TABLE IF EXISTS genzenuser CASCADE",
+        "DROP TABLE IF EXISTS memoryfact CASCADE",
         "DROP TABLE IF EXISTS store CASCADE",
         "DROP TABLE IF EXISTS store_migrations CASCADE",
         "DROP TABLE IF EXISTS survey CASCADE",
@@ -44,5 +45,6 @@ if __name__ == "__main__":
     try:
         delete_database()
     finally:
-        # Close the connection pool
-        pool.close()
+        # Only close the pool if it exists
+        if sync_pool is not None:
+            sync_pool.close()

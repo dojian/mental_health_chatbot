@@ -2,7 +2,13 @@ import pytest
 import pytest_asyncio
 from uuid import uuid4
 from datetime import datetime
-from src.models.schemas import ChatRequest, ChatSessionMetadata
+from src.models.schemas import (
+    ChatRequest, 
+    ChatSessionMetadata,
+    CheckpointConfig,
+    CheckpointMetadata
+)
+import json
 
 @pytest.mark.asyncio
 @pytest.mark.memory
@@ -13,24 +19,56 @@ async def test_short_term_memory(auth_client, checkpointer_fixture):
     
     # Create a test session
     session_id = str(uuid4())
+    thread_id = str(uuid4())
+    checkpoint_id = str(uuid4())
+    
+    # Create test data using existing models
     test_data = {
-        "messages": [
-            {"role": "user", "content": "Hello, my name is Test User"},
-            {"role": "assistant", "content": "Nice to meet you, Test User!"}
-        ]
+        "id": checkpoint_id,
+        "channel_values": {
+            "messages": [
+                {"role": "user", "content": "Hello, my name is Test User"},
+                {"role": "assistant", "content": "Nice to meet you, Test User!"}
+            ]
+        }
     }
     
-    # Store data in checkpointer with required metadata
-    config = {"configurable": {"session_id": session_id}}
-    metadata = {"version": 1, "timestamp": str(datetime.now())}
-    new_versions = {"messages": test_data["messages"]}
-    await checkpointer_fixture.aput(config, test_data, metadata, new_versions)
+    # Store data in checkpointer with required metadata using Pydantic models
+    config = CheckpointConfig(configurable={
+        "session_id": session_id,
+        "thread_id": thread_id,
+        "checkpoint_ns": "test_ns"
+    })
+    metadata = CheckpointMetadata(
+        version=1,
+        timestamp=datetime.now()
+    )
+    # Store messages directly in channel_values
+    new_versions = {"channel_values": json.dumps(test_data["channel_values"])}
+    
+    # Pass data as dictionaries
+    await checkpointer_fixture.aput(
+        config.model_dump(),
+        test_data,
+        metadata.model_dump(),
+        new_versions
+    )
     
     # Retrieve data from checkpointer
-    retrieved_data = await checkpointer_fixture.aget(config)
+    retrieved_data = await checkpointer_fixture.aget(config.model_dump())
     
+    print("Retrieved data:", retrieved_data)
+    print("Retrieved data type:", type(retrieved_data))
+    if isinstance(retrieved_data, dict):
+        print("Retrieved data keys:", retrieved_data.keys())
+        if "channel_values" in retrieved_data:
+            print("Channel values:", retrieved_data["channel_values"])
+            # Parse the channel_values back from JSON string
+            channel_values = json.loads(retrieved_data["channel_values"])
+            assert channel_values["messages"] == test_data["channel_values"]["messages"]
+
     assert retrieved_data is not None
-    assert retrieved_data.versions["messages"] == test_data["messages"]
+    assert retrieved_data["channel_values"]["messages"] == test_data["channel_values"]["messages"]
 
 @pytest.mark.asyncio
 @pytest.mark.memory

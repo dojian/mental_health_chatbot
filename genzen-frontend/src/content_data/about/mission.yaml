@@ -1,18 +1,34 @@
 title: About GenZen
 mission: >
-  GenZen is an innovative AI-powered mental health support platform designed to provide 24/7 assistance
-  to those seeking emotional support and guidance. Our mission is to make mental health support
-  accessible, confidential, and helpful for everyone.
+  Our mission is to empower college students to thrive academically, socially, and emotionally by providing 
+  empathetic, context-aware, and personalized AI-driven mental health support available 
+  anytime, anywhere. 
 
 description: >
   Using advanced artificial intelligence, we offer a safe space for users to express their thoughts
   and feelings, receive supportive responses, and access helpful resources for mental well-being.
 
-audience:
-  - Students dealing with academic stress and anxiety
-  - Young professionals navigating work-life balance
-  - Anyone seeking immediate emotional support
-  - Individuals looking for a confidential space to express themselves
+supported_topics: >
+  GenZen offers a judgement-free, confidential conversation while also providing support and 
+  guidance in the following topic areas:
+
+supported_topics_list:
+  - Budgeting
+  - Career 
+  - Coursework/Studying habits
+  - Internship
+  - Interviewing
+  - Major
+  - Mentoring
+  - Networking
+  - Post-Graduation
+  - Resume 
+
+# audience:
+#   - Students dealing with academic stress and anxiety
+#   - Young professionals navigating work-life balance
+#   - Anyone seeking immediate emotional support
+#   - Individuals looking for a confidential space to express themselves
 
 features:
   - title: 24/7 AI-powered emotional support
@@ -23,3 +39,13 @@ features:
     description: Access curated mental health resources and proven coping strategies.
   - title: Personalized support
     description: Receive tailored responses that understand your unique situation. 
+
+disclaimer: >
+  *GenZen is not to replace actual counseling sessions. For sensitive mental health topics 
+  such as suicide and depression or for diagnosis of mental disorders, please seek out a 
+  licensed mental health professional. 
+  *GenZen is not a substitute for professional medical advice, diagnosis, or treatment. 
+  If you are experiencing a medical emergency, please call 911 or seek immediate medical 
+  attention. 
+  
+  

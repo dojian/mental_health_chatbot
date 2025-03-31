@@ -12,14 +12,35 @@ from src.agents.classification_tools import predict_suicide_depression
 from src.agents.rag_hybrid_search import RAGPipeline
 from src.agents.pii_masker import anonymize_pii
 from src.utils.config_setting import Settings
-
-ragpipeline = RAGPipeline
+    
 settings = Settings()
 load_dotenv()
 
 model_name = os.getenv("OPENAI_MODEL_NAME")
 
 # Tool
+def ragpipeline(query:str):
+    """
+    Executes the RAG (Retrieval-Augmented Generation) pipeline to retrieve and rerank relevant documents.
+
+    This function initializes the RAG pipeline and retrieves relevant documents using a hybrid retrieval approach 
+    (BM25 + Qdrant vector search). It then applies reranking to return the top `final_k` results.
+
+    Args:
+        query (str): The input query for which relevant documents should be retrieved.
+
+    Returns:
+        List[Document]: A list of reranked documents relevant to the query.
+    
+    Note:
+        - This function creates an instance of `RAGPipeline`.
+        - It calls `initialize_rag_pipeline()` to set up the retriever ensemble.
+        - It then invokes `retrieve_with_rerank(query, final_k=10)` to return the top results.
+    """
+    pipeline = RAGPipeline() # Create an instance of RAGPipeline
+    pipeline.initialize_rag_pipeline()
+    return pipeline.retrieve_with_rerank(query, final_k=10)
+
 tools = [mental_health,ragpipeline, remember_information, recall_information]
 
 # Define LLM with bound tools
@@ -27,10 +48,11 @@ llm = ChatOpenAI(model=model_name)
 llm_with_tools = llm.bind_tools(tools)
                                
 # System message
-sys_msg_advice = SystemMessage(content=f"""You are a helpful student assistant tasked with mental health counseling. 
+sys_msg_advice = SystemMessage(content="""You are a helpful student assistant tasked with mental health counseling. 
                                When counseling, make sure to use the **answer** directly from the mental_health tool output.
                                If the mental_health tool output includes 'Providing Suggestions' as counseling_strategy, 
-                               retrieve additional information using the ragpipeline tool.
+                               retrieve additional information using the ragpipeline tool. 
+                               If ragpipeline tool is called, always answer the question using the retrieved chuncks.
                                """)
                                #use the predict_suicide_depression tool first to determine the depression class.
                                #If the mental_health tool output includes 'Providing Suggestions' as counseling_strategy, 
@@ -243,7 +265,7 @@ builder.add_edge("tools", "assistant")
 graph = builder.compile() #checkpointer=checkpointer
 
 if __name__ == "__main__": 
-    messages=[HumanMessage(content="does anyone else go to sleep too early because they can't stand being awake ?I usually workout alot when it't daytime, so that i could fall asleep early (or take a sleeping pill).")]
+    messages=[HumanMessage(content="My major is computer science. How do I find a mentor for career advice? Can you give me some suggestions?")]
     #I am Lily. I feel sad about my calculus homework. I don't know if i will be about to understand the chain rule.
     # Invoke graph
     result=graph. invoke({"messages": messages})

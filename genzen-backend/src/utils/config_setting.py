@@ -42,4 +42,4 @@ class Settings(BaseSettings):
     OPENAI_MODEL_NAME: str = os.getenv("OPENAI_MODEL_NAME")
     
     #allow advice
-    allow_advice: bool = False
+    allow_advice: bool = True

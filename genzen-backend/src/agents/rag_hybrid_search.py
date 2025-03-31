@@ -47,7 +47,7 @@ class RAGPipeline:
         s3.download_file(
             Bucket=settings.S3_BUCKET_NAME,
             Key=settings.S3_BUCKET_EMBEDDINGS_KEY,  # Path where the embeddings are saved in S3
-            Filename=f"{settings.S3_BUCKET_TEMP_PATH}/text_chunks.pkl"  # Temporary local path to save the file
+            Filename=f"{settings.S3_BUCKET_CHUNK_TEMP_PATH}/text_chunks.pkl"  # Temporary local path to save the file
         )
         
         # Load the embeddings from the downloaded file
@@ -63,7 +63,7 @@ class RAGPipeline:
 
         # Setup vector retriever
         self.embeddings_model = FastEmbedEmbeddings(model_name=settings.EMBEDDING_MODEL)
-        self.qdrant_client = QdrantClient(path=f"{settings.S3_BUCKET_TEMP_PATH}/qdrant_data")
+        self.qdrant_client = QdrantClient(path=f"{settings.S3_BUCKET_CHUNK_TEMP_PATH}/qdrant_data")
 
         # Check if the collection already exists
         # Avoid adding repeated documents into vectorstore if collection already exists
@@ -111,59 +111,32 @@ class RAGPipeline:
 
         print("RAG pipeline initialized with Qdrant + BM25 + RankFusion.")
 
-    def filter_docs_by_category(self, selected_categories): 
-        """Filters documents based on selected categories.
+    # def filter_docs_by_category(self, selected_categories): 
+    #     """Filters documents based on selected categories.
         
-        Args:
-            selected_categories (list): List of categories to filter documents by.
+    #     Args:
+    #         selected_categories (list): List of categories to filter documents by.
         
-        Returns:
-            List[Document]: Filtered list of documents.
-        """
-        if selected_categories is None or "Other" in selected_categories:
-            return self.chunks
-        return [doc for doc in self.chunks if any(category in doc.metadata["categories"] for category in selected_categories)]
+    #     Returns:
+    #         List[Document]: Filtered list of documents.
+    #     """
+    #     if selected_categories is None or "Other" in selected_categories:
+    #         return self.chunks
+    #     return [doc for doc in self.chunks if any(category in doc.metadata["categories"] for category in selected_categories)]
 
 
-    def retrieve_with_rerank(self, query: str, final_k: int = 10, selected_categories: list = None) -> List[Document]:
+    def retrieve_with_rerank(self, query: str, final_k: int = 10) -> List[Document]: #removed selected_categories (list, optional): Categories to filter results.
         """Retrieves and reranks documents based on a user query using Cohere's reranking model.
         
         Args:
             query (str): The query string.
             final_k (int): Number of top documents to return after reranking.
-            selected_categories (list, optional): Categories to filter results.
         
         Returns:
             List[Document]: The top reranked documents.
         """
-        # If there are no selected categories or user selects Other, use base retriever to search for documents in entire vector database
-        if selected_categories is None or "Other" in selected_categories:
-            initial_results: List[Document] = self.base_retriever.invoke(query)
-        else:
-        # Otherwise (re)instantiate retrievers on documents that has at least 1 category in list of selected categories
-            if self.categories is None or set(self.categories) != set(selected_categories):
-                self.categories = selected_categories
-                # filter qdrant retrieved docs to categories
-                filter_criteria = Filter(
-                                      must=[  # 'must' is a required field in Qdrant's filtering model
-                                            FieldCondition(
-                                                key="metadata.categories",
-                                                match=MatchAny(any=selected_categories)  # Matches any category in the select list
-                                            )
-                                        ]
-                                    )
-                filtered_qdrant_retriever = self.vector_store.as_retriever(search_kwargs={"filter": filter_criteria, 
-                                                                                          "k": self.initial_k})
-                # create new BM25 retriever on filtered docs in categories
-                filtered_docs = self.filter_docs_by_category(selected_categories)
-                filtered_bm25_retriever = BM25Retriever.from_documents(filtered_docs)
-                filtered_bm25_retriever.k = self.initial_k
-                self.filtered_retriever = EnsembleRetriever(
-                    retrievers=[filtered_bm25_retriever, filtered_qdrant_retriever],
-                    weights=[self.bm25_weight, self.qdrant_weight]
-                )
-            
-            initial_results = self.filtered_retriever.invoke(query)
+        # Always use the base retriever (no filtering by categories)
+        initial_results: List[Document] = self.base_retriever.invoke(query)
 
         if not initial_results:
             print("⚠️ No documents retrieved for query:", query)
@@ -172,6 +145,7 @@ class RAGPipeline:
         print(f"Retrieved {len(initial_results)} docs, reranking top {final_k}...")
 
         documents = [doc.page_content for doc in initial_results]
+        print(documents[0][:200]) #debug
 
         # Step 2: Rerank using Cohere
         response = self.cohere_client.rerank(
@@ -180,8 +154,6 @@ class RAGPipeline:
             documents=documents,
             top_n=min(final_k, len(documents))  # Prevent index errors
         )
-
-        #time.sleep(0.1)  # Optional: adjust for your API plan
 
         # Step 3: Get top reranked documents
         reranked_docs = [initial_results[r.index] for r in response.results]
@@ -201,9 +173,8 @@ if __name__ == "__main__":
     rag_pipeline.initialize_rag_pipeline()
 
     # Test retrieve with rerank
-    query = "How do I find a mentor? I feel so behind and failing"
-    selected_categories = ["career"]
-    top_docs = rag_pipeline.retrieve_with_rerank(query, final_k=10, selected_categories = selected_categories)
+    query = "my major is finance. How do I find a mentor? I feel so behind and failing"
+    top_docs = rag_pipeline.retrieve_with_rerank(query, final_k=10)
 
     # Print the reranked documents
     print("Top reranked documents:")

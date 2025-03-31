@@ -1,6 +1,6 @@
 import json
 from uuid import UUID
-from datetime import datetime
+from datetime import datetime, timezone
 from pydantic import BaseModel
 from pydantic import EmailStr
 from sqlmodel import Field
@@ -69,18 +69,19 @@ class MemoryFactResponse(MemoryFactCreate):
     last_accessed: datetime
 
 class SurveyResponseBase(BaseModel):
-    session_id: str
     emotional_intensity: Optional[int] = Field(ge=1, le=5)
     selected_topics: List[TypeLiteral[
         "Budgeting", "Career", "Coursework", "Internship", "Interviewing",
         "Major", "Mentoring", "Networking", "Post-Graduation", "Resume", "Other"
     ]]
     suggestions_enabled: bool = True
+    timestamp: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
 class PreChatSurveyCreate(SurveyResponseBase):
     user_disclaimer_accepted: bool = True
 
 class PostChatSurveyCreate(SurveyResponseBase):
+    session_id: str  # Keep session_id for post-chat survey since it's tied to a specific chat
     feedback: Optional[str]
 
 # Checkpoint-specific models (reusing existing structures where possible)

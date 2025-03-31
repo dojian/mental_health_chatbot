@@ -295,28 +295,17 @@ async def submit_pre_chat_survey(
     session: Session = Depends(get_session),
     current_user: GenZenUser = Depends(get_current_user),
 ):
-    # First check if the chat session exists
-    chat_session = session.query(ChatSession).filter(
-        ChatSession.session_id == survey.session_id,
-        ChatSession.user_id == current_user.id,
-    ).first()
+    # Convert the survey data to dict and handle datetime serialization
+    survey_dict = survey.model_dump()
+    if 'timestamp' in survey_dict:
+        survey_dict['timestamp'] = survey_dict['timestamp'].isoformat()
 
-    # If chat session doesn't exist, create it
-    if not chat_session:
-        chat_session = ChatSession(
-            session_id=survey.session_id,
-            user_id=current_user.id,
-            session_name=None  # Can be updated later
-        )
-        session.add(chat_session)
-        session.commit()
-
-    # Now create the survey data
+    # Create the survey data with user_id only
     survey_data = SurveyData(
         user_id=current_user.id,
-        session_id=survey.session_id,
         survey_type="pre",
-        survey_data=survey.model_dump()
+        survey_data=survey_dict,
+        created_at=survey.timestamp
     )
     session.add(survey_data)
     session.commit()
@@ -328,11 +317,28 @@ async def submit_post_chat_survey(
     session: Session = Depends(get_session),
     current_user: GenZenUser = Depends(get_current_user),
 ):
+    # First check if the chat session exists and belongs to the user
+    chat_session = session.query(ChatSession).filter(
+        ChatSession.session_id == survey.session_id,
+        ChatSession.user_id == current_user.id,
+    ).first()
+    
+    if not chat_session:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Chat session not found or does not belong to current user"
+        )
+
+    # Convert the survey data to dict and handle datetime serialization
+    survey_dict = survey.model_dump()
+    if 'timestamp' in survey_dict:
+        survey_dict['timestamp'] = survey_dict['timestamp'].isoformat()
+
     survey_data = SurveyData(
-        user_id = current_user.id,
-        session_id = survey.session_id,
-        survey_type = "post",
-        data = survey.model_dump()
+        user_id=current_user.id,
+        survey_type="post",
+        survey_data=survey_dict,
+        created_at=survey.timestamp
     )
     session.add(survey_data)
     session.commit()

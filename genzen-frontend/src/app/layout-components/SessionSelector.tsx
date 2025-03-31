@@ -33,7 +33,7 @@ export default function SessionSelector({ onSessionSelect, currentSessionId }: S
       }
 
       console.log('Fetching recent sessions...');
-      const response = await fetch('/api/chat/recent-sessions', {
+      const response = await fetch(`${env.apiUrl}/v1/chat/recent-sessions?limit=2`, {
         headers: {
           'Authorization': `Bearer ${token}`,
         },
@@ -57,13 +57,23 @@ export default function SessionSelector({ onSessionSelect, currentSessionId }: S
 
       // Filter and validate sessions
       const validSessions = data.filter(session => {
-        const isValid = session && 
-          typeof session.session_id === 'string' &&
-          typeof session.session_name === 'string' &&
-          typeof session.last_interaction === 'string';
+        if (!session) {
+          console.warn('Null or undefined session');
+          return false;
+        }
+
+        const isValid = 
+          session.session_id && typeof session.session_id === 'string' &&
+          session.session_name && typeof session.session_name === 'string' &&
+          session.last_interaction && typeof session.last_interaction === 'string';
         
         if (!isValid) {
-          console.warn('Invalid session data:', session);
+          console.warn('Invalid session data:', JSON.stringify(session, null, 2));
+          console.warn('Missing or invalid properties:',
+            !session.session_id ? 'session_id' : '',
+            !session.session_name ? 'session_name' : '',
+            !session.last_interaction ? 'last_interaction' : ''
+          );
         }
         
         return isValid;
@@ -71,10 +81,12 @@ export default function SessionSelector({ onSessionSelect, currentSessionId }: S
 
       // Sort sessions by last interaction, most recent first
       validSessions.sort((a, b) => {
-        return new Date(b.last_interaction).getTime() - new Date(a.last_interaction).getTime();
+        const dateA = new Date(a.last_interaction);
+        const dateB = new Date(b.last_interaction);
+        return dateB.getTime() - dateA.getTime();
       });
 
-      console.log('Valid sessions:', JSON.stringify(validSessions, null, 2));
+      console.log('Valid sessions after filtering and sorting:', JSON.stringify(validSessions, null, 2));
       setSessions(validSessions);
     } catch (error) {
       console.error('Error fetching sessions:', error);

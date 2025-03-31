@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { NextRequest } from 'next/server';
+import { env } from '@/utils/env';
 
 export async function POST(request: NextRequest) {
   try {
@@ -14,7 +15,7 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     console.log('Chat request body:', JSON.stringify(body, null, 2));
 
-    const response = await fetch('http://localhost:8001/v1/chat', {
+    const response = await fetch(`${env.apiUrl}/v1/agent-chat`, {
       method: 'POST',
       headers: {
         'Authorization': authHeader,

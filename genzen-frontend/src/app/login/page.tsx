@@ -1,5 +1,17 @@
+'use client'
+
 import LoginForm from '@/components/auth/LoginForm';
 import Link from 'next/link';
+import { Suspense } from 'react';
+
+// Wrapper component that provides the Suspense boundary
+function LoginFormWithSuspense() {
+    return (
+      <Suspense fallback={<div className="p-4 text-center">Loading login form...</div>}>
+        <LoginForm />
+      </Suspense>
+    );
+  }
 
 export default function LoginPage() {
     return (
@@ -9,7 +21,7 @@ export default function LoginPage() {
                 <p className="mt-2 text-gray-600">Sign in to continue to GenZen</p>
             </div>
 
-            <LoginForm />
+            <LoginFormWithSuspense />
 
             <div className="mt-4 text-center">
                 <p className="text-gray-600">

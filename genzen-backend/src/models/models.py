@@ -4,6 +4,7 @@ from uuid import UUID, uuid4
 from sqlmodel import Field, SQLModel
 from sqlalchemy import String, Column, Index
 from sqlalchemy.dialects.postgresql import JSONB
+from typing import Optional
 
 
 class GenZenUser(SQLModel, table=True):
@@ -59,11 +60,10 @@ class SurveyData(SQLModel, table=True):
     __tablename__ = "survey"
     id: UUID = Field(default_factory=uuid4, primary_key=True)
     user_id: int = Field(foreign_key="genzenuser.id", index=True)
-    session_id: str = Field(foreign_key="chatsession.session_id")
     survey_type: str = Field(max_length=20) # pre or post
     survey_data: dict = Field(sa_column=Column(JSONB))
     created_at: datetime.datetime = Field(default_factory=lambda: datetime.datetime.now(datetime.timezone.utc))
 
     __table_args__ = (
-        Index('idx_survey_user_session', 'user_id', 'session_id'),  # Composite index for survey lookups
+        Index('idx_survey_user_timestamp', 'user_id', 'created_at'),  # Composite index for survey lookups by user and time
     )

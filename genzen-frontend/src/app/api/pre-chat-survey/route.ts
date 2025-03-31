@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
+import { env } from '@/utils/env';
 
 export async function POST(request: Request) {
   try {
@@ -11,7 +12,7 @@ export async function POST(request: Request) {
     }
 
     const body = await request.json();
-    const response = await fetch('http://localhost:8001/v1/pre-chat-survey', {
+    const response = await fetch(`${env.apiUrl}/v1/pre-chat-survey`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

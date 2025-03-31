@@ -1,5 +1,8 @@
 import { NextResponse } from 'next/server';
 import { NextRequest } from 'next/server';
+import { env } from '@/utils/env';
+
+export const dynamic = 'force-dynamic';
 
 export async function GET(request: NextRequest) {
   try {
@@ -11,7 +14,7 @@ export async function GET(request: NextRequest) {
     }
 
     console.log('Fetching recent sessions from backend...');
-    const response = await fetch('http://localhost:8001/v1/chat/recent-sessions?limit=2', {
+    const response = await fetch(`${env.apiUrl}/v1/chat/recent-sessions?limit=2`, {
       headers: {
         'Authorization': authHeader,
       },

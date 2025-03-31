@@ -1,7 +1,7 @@
 import boto3
 import pickle
 import cohere
-# import time
+from typing import List
 from langchain_qdrant import QdrantVectorStore
 from langchain_community.retrievers import BM25Retriever
 from langchain.retrievers import EnsembleRetriever
@@ -16,7 +16,11 @@ from src.utils.config_setting import Settings
 settings = Settings()
 
 class RAGPipeline:
+    """A Retrieval-Augmented Generation (RAG) pipeline that integrates BM25 and Qdrant vector retrieval 
+    with Cohere's reranking model for improved document retrieval and ranking."""
+    
     def __init__(self):
+        """Initializes the RAGPipeline with default values for retrievers, embeddings, and configuration settings."""
         self.chunks = None
         self.base_retriever = None
         self.cohere_client = None
@@ -30,7 +34,13 @@ class RAGPipeline:
         self.qdrant_weight = None
     
     def initialize_rag_pipeline(self, initial_k = 25, bm25_weight = 0.5, qdrant_weight = 0.5):
-        # Initialize the S3 client
+        """Initializes the RAG pipeline by setting up BM25 and Qdrant-based retrievers.
+        
+        Args:
+            initial_k (int): Number of top documents to retrieve before reranking.
+            bm25_weight (float): Weight assigned to BM25 retriever in ensemble.
+            qdrant_weight (float): Weight assigned to Qdrant retriever in ensemble.
+        """
         s3 = boto3.client('s3')
 
         # Download the pre-chunked text document file from S3
@@ -102,13 +112,30 @@ class RAGPipeline:
         print("RAG pipeline initialized with Qdrant + BM25 + RankFusion.")
 
     def filter_docs_by_category(self, selected_categories): 
+        """Filters documents based on selected categories.
+        
+        Args:
+            selected_categories (list): List of categories to filter documents by.
+        
+        Returns:
+            List[Document]: Filtered list of documents.
+        """
         if selected_categories is None or "Other" in selected_categories:
             return self.chunks
         return [doc for doc in self.chunks if any(category in doc.metadata["categories"] for category in selected_categories)]
 
 
     def retrieve_with_rerank(self, query: str, final_k: int = 10, selected_categories: list = None) -> List[Document]:
+        """Retrieves and reranks documents based on a user query using Cohere's reranking model.
         
+        Args:
+            query (str): The query string.
+            final_k (int): Number of top documents to return after reranking.
+            selected_categories (list, optional): Categories to filter results.
+        
+        Returns:
+            List[Document]: The top reranked documents.
+        """
         # If there are no selected categories or user selects Other, use base retriever to search for documents in entire vector database
         if selected_categories is None or "Other" in selected_categories:
             initial_results: List[Document] = self.base_retriever.invoke(query)

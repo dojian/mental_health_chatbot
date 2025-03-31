@@ -16,7 +16,7 @@ def mental_health(user_history: str, user_text: str) -> Dict:
 
     # Format the input prompt
     prompt_advice = f"""Given a student's Conversation History and Current Message, extract the relevant metadata, including emotion type, emotion intensity (1-5), problem type, and counseling strategy.
-    Then answer the student's Current Message as a counselor based on the metadata. Keep it concise but affirmative.
+    Then answer the student's Current Message as a counselor based on the metadata. Keep it concise but affirmative. Make sure your response is friendly, empathetic, and relevant to the current message.
 
     **Constraints:** The counselor must not use personal experiences, references to friends, or imagined scenarios. Provide only general suggestions based on the provided context.
 

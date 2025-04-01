@@ -3,18 +3,18 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: backend-deployment
-  namespace: genzen-backend
+  namespace: genzen
   labels:
-    app: backend-deployment
+    app: genzen-app
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: genzen-api
+      app: genzen-app
   template:
     metadata:
       labels:
-        app: genzen-api
+        app: genzen-app
     spec:
       containers:
         - name: genzen-backend
@@ -38,21 +38,21 @@ spec:
           #   httpGet:
           #     scheme: HTTP
           #     path: /health
-          #     port: 8000
+          #     port: 8001
           #   initialDelaySeconds: 1
           #   periodSeconds: 3
           # livenessProbe:
           #   httpGet:
           #     scheme: HTTP
           #     path: /health
-          #     port: 8000
+          #     port: 8001
           #   initialDelaySeconds: 15
           #   periodSeconds: 30
           # startupProbe:
           #   httpGet:
           #     scheme: HTTP
           #     path: /health
-          #     port: 8000
+          #     port: 8001
           #   failureThreshold: 30
           #   periodSeconds: 10
       initContainers:

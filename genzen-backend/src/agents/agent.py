@@ -52,7 +52,8 @@ sys_msg_advice = SystemMessage(content="""You are a helpful student assistant ta
                                When counseling, make sure to use the **answer** directly from the mental_health tool output.
                                If the mental_health tool output includes 'Providing Suggestions' as counseling_strategy, 
                                retrieve additional information using the ragpipeline tool. 
-                               If ragpipeline tool is called, always answer the question using the retrieved chuncks.
+                               If ragpipeline tool is called, answer the question(user_text) only based on the context information the ragpipeline tool provided.
+                               Do NOT use bullet points in the answer. Answer should be in 5 sentences and use the key words in the user_text to start the answer.
                                """)
                                #use the predict_suicide_depression tool first to determine the depression class.
                                #If the mental_health tool output includes 'Providing Suggestions' as counseling_strategy, 

@@ -20,16 +20,20 @@ def predict_suicide_depression(user_text: str) -> str:
     """
     Calls the SageMaker endpoint for suicide/depression prediction.
 	Output:
-    	- "misc": did not detect depression nor suicide 
-    	- "suicide": detected suicide 
-    	- "minimal depression": detected no depression or very minimal depression
-    	- "mild depression": detected mild form of depression 
-    	- "severe depression": detected severe detection  
+        - "misc": did not detect depression nor suicide 
+        - "suicide": detected suicide 
+        - "minimal depression": detected no depression or very minimal depression
+        - "mild depression": detected mild form of depression 
+        - "severe depression": detected severe detection  
     """
     sm_runtime = boto3.client('sagemaker-runtime')
+    user_text = '''
+    {0}
+    '''.format(user_text)
+
     # Invoke SageMaker endpoint to classify suicide or depression
     response_suicide = sm_runtime.invoke_endpoint(
-    	TargetModel = suicide_model_tar,
+        TargetModel = suicide_model_tar,
         EndpointName= classification_endpoint, 
         ContentType='text/csv', 
         Body=user_text.encode(encoding="UTF-8")

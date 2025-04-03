@@ -5,7 +5,7 @@ metadata:
   name: backend-service
   namespace: genzen
   labels:
-    app: genzen-app
+    app: backend-service
 spec:
   type: ClusterIP
   ports:
@@ -13,4 +13,4 @@ spec:
       targetPort: 8001
       protocol: TCP
   selector:
-    app: genzen-app
+    app: genzen-backend

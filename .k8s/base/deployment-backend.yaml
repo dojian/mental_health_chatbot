@@ -5,26 +5,21 @@ metadata:
   name: backend-deployment
   namespace: genzen
   labels:
-    app: genzen-app
+    app: genzen-backend
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: genzen-app
+      app: genzen-backend
   template:
     metadata:
       labels:
-        app: genzen-app
+        app: genzen-backend
     spec:
       containers:
         - name: genzen-backend
           image: genzen-backend:v01
           imagePullPolicy: IfNotPresent
-          env:
-            - name: REDIS_URL
-              value: redis://redis-service
-            - name: REDIS_PORT
-              value: "6379"
           resources:
             requests:
               cpu: 200m
@@ -34,6 +29,9 @@ spec:
               memory: 1000Mi
           ports:
             - containerPort: 8001
+          # env: 
+          #   - name: CORS_ORIGINS
+          #     value: "http://frontend-service:3000,http://localhost:3000"
           # readinessProbe:
           #   httpGet:
           #     scheme: HTTP

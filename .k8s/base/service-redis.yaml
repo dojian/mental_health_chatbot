@@ -5,11 +5,12 @@ metadata:
   name: redis-service
   namespace: genzen
   labels:
-    app: redis-service
+    app: redis-server
 spec:
   type: ClusterIP
   ports:
     - port: 6379
       targetPort: 6379
+      protocol: TCP
   selector:
     app: redis-server

@@ -9,15 +9,34 @@ resources:
 secretGenerator:
   - name: backend-secrets
     envs:
-      - .env-docker
+      - .env.dev.backend
+
+# configMapGenerator:
+#   - name: frontend-env-config
+#     envs:
+#       - .env.production.local
 
 images:
   - name: genzen-backend
     newName: genzen-backend
     newTag: v03
+  # - name: frontend
+  #   newName: genzen-frontend
+  #   newTag: v05
 
 patches:
 - path: deployment-patch.yaml
   target:
     kind: Deployment
     name: backend-deployment
+# - path: service-frontend-patch.yaml
+#   target:
+#     kind: Service
+#     name: frontend-service
+#     labelSelector: app=frontend-
+### Test backend service if set it was correctly via minikube tunnel
+- path: service-backend-patch.yaml
+  target:
+    kind: Service
+    name: backend-service
+    labelSelector: app=backend-service

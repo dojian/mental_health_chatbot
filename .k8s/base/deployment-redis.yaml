@@ -4,6 +4,8 @@ kind: Deployment
 metadata:
   name: redis-deployment
   namespace: genzen
+  labels:
+    app: redis-server
 spec:
   replicas: 1
   selector:

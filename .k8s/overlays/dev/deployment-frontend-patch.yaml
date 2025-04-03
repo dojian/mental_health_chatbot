@@ -1,0 +1,13 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: frontend-deployment
+  namespace: genzen
+spec:
+  template:
+    spec:
+      containers:
+        - name: genzen-frontend
+          envFrom:
+            - configMapRef:
+                name: frontend-env-config

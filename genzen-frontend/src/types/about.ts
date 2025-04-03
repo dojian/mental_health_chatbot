@@ -37,3 +37,11 @@ export interface Privacy {
     content: string;
   }[];
 } 
+
+export interface Acknowledgement {
+  description: string;
+  helpers: {
+    name: string;
+    role: string;
+  }[];
+} 

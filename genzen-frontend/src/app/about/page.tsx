@@ -6,7 +6,7 @@ import { FaGithub, FaLinkedin, FaGlobe } from 'react-icons/fa';
 export default async function About() {
     const mission = getMissionContent();
     const { team } = getTeamContent();
-
+    // const { helpers } = getAcknowledgementContent();
     return (
         <>
             {/* Mission Section */}
@@ -96,6 +96,26 @@ export default async function About() {
                             </div>
                         </div>
                     ))}
+                </div>
+                <br />
+            </section>
+
+            {/* Acknowledgements Section */}
+            <section>
+                <h2 className="text-2xl font-semibold mb-6 text-gray-800">Acknowledgements</h2>
+                <div className="bg-white/80 rounded-lg p-6 shadow-lg space-y-6">
+                <p className="text-gray-700 mb-4">
+                  
+                We would like to acknowledge the following mental health professionals who gave feedback and helped develop the mental-wellness resources.  
+                <br /><br />
+                   <ul>
+                    <li>Nikkolson Ang (M.S.) - Associate Marriage and Family Therapist</li>
+                    <li>Cassandra Aguirre (M.A.) - School Psychologist</li>
+                   </ul>
+
+                </p>
+
+
                 </div>
             </section>
         </>

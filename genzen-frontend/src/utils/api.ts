@@ -12,9 +12,9 @@ export async function sendChatMessage(request: ChatRequest): Promise<ChatRespons
     throw new Error('No authentication token found');
   }
 
-  console.log('Sending request to:', `/api/agent-chat`);
+  console.log('Sending request to:', `/api/chat`);
   
-  const response = await fetch(`/api/agent-chat`, {
+  const response = await fetch(`/api/chat`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',

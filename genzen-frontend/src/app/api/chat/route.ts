@@ -2,6 +2,12 @@ import { NextResponse } from 'next/server';
 import { NextRequest } from 'next/server';
 import { env } from '@/utils/env';
 
+const BACKEND_URL = process.env.NEXT_PUBLIC_API_URL;
+
+if (!BACKEND_URL) {
+  throw new Error('NEXT_PUBLIC_API_URL environment variable is not set');
+}
+
 export async function POST(request: NextRequest) {
   try {
     // Get the authorization header from the request
@@ -15,7 +21,7 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     console.log('Chat request body:', JSON.stringify(body, null, 2));
 
-    const response = await fetch(`/v1/agent-chat`, {
+    const response = await fetch(`${BACKEND_URL}/v1/agent-chat`, {
       method: 'POST',
       headers: {
         'Authorization': authHeader,

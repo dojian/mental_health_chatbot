@@ -26,8 +26,3 @@ patches:
   target:
     kind: Deployment
     name: backend-deployment
-# - path: service-frontend-patch.yaml
-#   target:
-#     kind: Service
-#     name: frontend-service
-#     labelSelector: app=genzen-frontend

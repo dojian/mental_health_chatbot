@@ -5,6 +5,7 @@ namespace: genzen
 resources:
   - ./namespace.yaml
   - ../../base
+  - ./gateway-frontend.yaml
   - ./virtual-service.yaml
 
 secretGenerator:

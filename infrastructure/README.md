@@ -23,6 +23,37 @@ The infrastructure is built using Terraform and `eksctl`.
   * Currently, only one node group will be created to ensure functionality before scaling up.
 
 
+### Manual ECR for 2 different images
+1. build backend image
+```bash
+docker build -t genzen-backend:v1.1 .
+```
+2. tag image - Make sure to replace image id and the ecr url with your own
+```bash
+docker tag 0c4bde675a6f 975049977273.dkr.ecr.us-east-2.amazonaws.com/genzen/backend:v1.1 
+```
+3. push image
+```bash
+docker push 975049977273.dkr.ecr.us-east-2.amazonaws.com/genzen/backend:v1.1
+```
+4. build frontend image
+```bash
+docker build \
+--build-arg NEXT_PUBLIC_API_URL=http://backend-service:8001 \
+--build-arg NEXT_PUBLIC_APP_ENV=staging \
+-t genzen-frontend:v1.1 . 
+```
+5. tag image
+```bash
+docker tag ed5cd04db2f4 975049977273.dkr.ecr.us-east-2.amazonaws.com/genzen/frontend:v1.1
+```
+6. push image
+```bash
+docker push 975049977273.dkr.ecr.us-east-2.amazonaws.com/genzen/frontend:v1.1
+```
+
+## S3
+* S3 buckets are created in the `us-east-2` region.
 
 ## Terraform
 * useful commands

@@ -3,33 +3,44 @@ apiVersion: eksctl.io/v1alpha5
 kind: ClusterConfig
 
 metadata:
-  name: genzen-test-06
+  name: genzen-test-02
   region: us-east-2
-  version: "1.31" # 1.32 is the latest version
-  tags:
-    karpenter.sh/discovery: genzen-test-06
+  version: '1.32' # 1.32 is the latest version
+  # tags:
+  #   karpenter.sh/discovery: genzen-test-02
 
-iam:
-  withOIDC: true
+# iam:
+#   withOIDC: true
 
 availabilityZones:
   - us-east-2a
   - us-east-2b
-  # - us-east-2c
 
-karpenter:
-  version: 'v0.20.0'
+# karpenter:
+#   version: '1.3.3'
 
-nodeGroups:
-  - name: ng-spot-1
+###
+# Instance Types List
+# t3.micro = 2 cores, 
+###
+
+managedNodeGroups:
+  - name: managed-ng-1
+    instanceType: m4.large
     minSize: 1
-    maxSize: 2
-    instancesDistribution:
-      maxPrice: 0.017
-      instanceTypes: ["t2.micro", "t3.micro"]
-      onDemandBaseCapacity: 0
-      onDemandPercentageAboveBaseCapacity: 50
-      spotInstancePools: 1
+    maxSize: 3
+    desiredCapacity: 1
+    spot: true
+# nodeGroups:
+#   - name: ng-spot-1
+#     minSize: 1
+#     maxSize: 2
+#     instancesDistribution:
+#       maxPrice: 0.017
+#       instanceTypes: ["t2.micro", "t3.micro"]
+#       onDemandBaseCapacity: 0
+#       onDemandPercentageAboveBaseCapacity: 50
+#       spotInstancePools: 1
   # - name: ng-spot-1
   #   instanceType: ["t2.micro", "t3.micro"]
   #   spot: true

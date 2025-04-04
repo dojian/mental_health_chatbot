@@ -14,10 +14,10 @@ secretGenerator:
 images:
   - name: genzen-backend
     newName: genzen-backend
-    newTag: url
+    newTag: v1.2
   - name: genzen-frontend
     newName: genzen-frontend
-    newTag: url
+    newTag: v1.2
 
 patches:
 - path: deployment-patch.yaml

@@ -5,32 +5,50 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { env } from '@/utils/env';
 import Cookies from 'js-cookie';
 import { useAuth } from '@/contexts/AuthContext';
+import { loginSchema, type LoginSchema } from '@/lib/validations/auth';
+import { ZodError } from 'zod';
+
+interface FormErrors extends Partial<Record<keyof LoginSchema, string>> {
+    form?: string;
+}
 
 export default function LoginForm() {
-    const [username, setUsername] = useState('');
-    const [password, setPassword] = useState('');
-    const [error, setError] = useState('');
+    const [formData, setFormData] = useState<LoginSchema>({
+        username: '',
+        password: '',
+    });
+    const [errors, setErrors] = useState<FormErrors>({});
     const [isLoading, setIsLoading] = useState(false);
     const router = useRouter();
     const searchParams = useSearchParams();
     const { setIsAuthenticated } = useAuth();
 
+    const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const { name, value } = e.target;
+        setFormData(prev => ({ ...prev, [name]: value }));
+        // Clear error when user starts typing
+        if (errors[name as keyof LoginSchema]) {
+            setErrors(prev => ({ ...prev, [name]: '' }));
+        }
+    };
+
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        setError('');
-        setIsLoading(true);
+        setErrors({});
 
         try {
-            const formData = new FormData();
-            formData.append('username', username);
-            formData.append('password', password);
-            
-            // console.log('Sending login request to:', `${env.apiUrl}/auth/login`);
+            // Validate form data
+            const validatedData = loginSchema.parse(formData);
+            setIsLoading(true);
+
+            const loginFormData = new FormData();
+            loginFormData.append('username', validatedData.username);
+            loginFormData.append('password', validatedData.password);
 
             const response = await fetch(`/api/auth/login`, {
                 method: 'POST',
                 credentials: 'include',
-                body: formData,
+                body: loginFormData,
             });
 
             const data = await response.json();
@@ -53,7 +71,18 @@ export default function LoginForm() {
             const redirectTo = searchParams.get('redirect') || '/chat';
             router.push(redirectTo);
         } catch (err) {
-            setError(err instanceof Error ? err.message : 'Login failed');
+            if (err instanceof Error) {
+                setErrors({ form: err.message });
+            } else if (err instanceof ZodError) {
+                // Handle Zod validation errors
+                const validationErrors: FormErrors = {};
+                err.errors.forEach((error) => {
+                    if (error.path[0]) {
+                        validationErrors[error.path[0] as keyof LoginSchema] = error.message;
+                    }
+                });
+                setErrors(validationErrors);
+            }
         } finally {
             setIsLoading(false);
         }
@@ -64,9 +93,9 @@ export default function LoginForm() {
             <form onSubmit={handleSubmit} className="bg-white/80 rounded-lg shadow-md p-8 space-y-6">
                 <h2 className="text-2xl font-semibold text-gray-800 mb-6">Sign In</h2>
                 
-                {error && (
+                {errors.form && (
                     <div className="bg-red-50 text-red-500 p-3 rounded-md">
-                        {error}
+                        {errors.form}
                     </div>
                 )}
 
@@ -79,12 +108,14 @@ export default function LoginForm() {
                             type="text"
                             id="username"
                             name="username"
-                            required
-                            value={username}
-                            onChange={(e) => setUsername(e.target.value)}
-                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-black"
+                            value={formData.username}
+                            onChange={handleChange}
+                            className={`w-full px-3 py-2 border ${errors.username ? 'border-red-500' : 'border-gray-300'} rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-black`}
                             placeholder="Enter your username"
                         />
+                        {errors.username && (
+                            <p className="mt-1 text-sm text-red-500">{errors.username}</p>
+                        )}
                     </div>
 
                     <div>
@@ -95,12 +126,14 @@ export default function LoginForm() {
                             type="password"
                             id="password"
                             name="password"
-                            required
-                            value={password}
-                            onChange={(e) => setPassword(e.target.value)}
-                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-black"
+                            value={formData.password}
+                            onChange={handleChange}
+                            className={`w-full px-3 py-2 border ${errors.password ? 'border-red-500' : 'border-gray-300'} rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-black`}
                             placeholder="Enter your password"
                         />
+                        {errors.password && (
+                            <p className="mt-1 text-sm text-red-500">{errors.password}</p>
+                        )}
                     </div>
                 </div>
 

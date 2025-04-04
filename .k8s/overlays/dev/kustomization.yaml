@@ -11,11 +11,6 @@ secretGenerator:
     envs:
       - .env.dev.backend
 
-# configMapGenerator:
-#   - name: frontend-env-config
-#     envs:
-#       - .env.production.local
-
 images:
   - name: genzen-backend
     newName: genzen-backend

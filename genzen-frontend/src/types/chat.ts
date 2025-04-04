@@ -31,4 +31,9 @@ export interface ChatState {
   sessionId: string | null;
   isLoading: boolean;
   error: string | null;
+}
+
+export interface Session {
+    id: string;
+    name: string;
 } 

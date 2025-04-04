@@ -2,12 +2,14 @@
 
 import { useState, useRef, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { ChatMessage, ChatState, SessionMetadata } from '@/types/chat';
+import { ChatMessage, ChatState, SessionMetadata, ChatRequest } from '@/types/chat';
 import { sendChatMessage } from '@/utils/api';
 import { env } from '@/utils/env';
 import DisclaimerModal from '../layout-components/DisclaimerModal';
 import SessionSelector from '../layout-components/SessionSelector';
 import Cookies from 'js-cookie';
+import { chatMessageSchema } from '@/lib/validations/chat';
+import { ZodError } from 'zod';
 
 export default function ChatPage() {
   const router = useRouter();
@@ -85,25 +87,6 @@ export default function ChatPage() {
     e.preventDefault();
     if (!inputMessage.trim() || chatState.isLoading) return;
 
-    console.log('Starting message submission with input:', inputMessage);
-    console.log('Current session ID:', chatState.sessionId);
-
-    const userMessage: ChatMessage = {
-      query: inputMessage,
-      response: '',
-      timestamp: new Date(),
-      isUser: true,
-    };
-
-    setChatState(prev => ({
-      ...prev,
-      messages: [...prev.messages, userMessage],
-      isLoading: true,
-      error: null,
-    }));
-
-    setInputMessage('');
-
     try {
       const now = new Date();
       // Format the date as YYYY-MM-DD
@@ -117,27 +100,34 @@ export default function ChatPage() {
         memory_context: [],
       };
 
-      console.log('Preparing chat request with metadata:', JSON.stringify(sessionMetadata, null, 2));
-
-      // Prepare the request payload
-      const requestPayload: any = {
+      // Prepare and validate the request payload
+      const requestPayload: ChatRequest = {
         query: inputMessage,
         session_metadata: sessionMetadata,
+        session_id: chatState.sessionId,
+        ...(chatState.sessionId ? {} : { session_name: inputMessage.slice(0, 100) }),
       };
 
-      // Only include session_id if we have a current session
-      if (chatState.sessionId) {
-        requestPayload.session_id = chatState.sessionId;
-      } else {
-        // For new sessions, use the first message as the session name
-        requestPayload.session_name = inputMessage.slice(0, 100); // Limit to 50 chars
-      }
+      // Validate the payload
+      const validatedPayload = chatMessageSchema.parse(requestPayload);
 
-      console.log('Sending request payload:', JSON.stringify(requestPayload, null, 2));
+      const userMessage: ChatMessage = {
+        query: validatedPayload.query,
+        response: '',
+        timestamp: new Date(),
+        isUser: true,
+      };
 
-      const response = await sendChatMessage(requestPayload);
+      setChatState(prev => ({
+        ...prev,
+        messages: [...prev.messages, userMessage],
+        isLoading: true,
+        error: null,
+      }));
 
-      console.log('Received response from sendChatMessage:', JSON.stringify(response, null, 2));
+      setInputMessage('');
+
+      const response = await sendChatMessage(validatedPayload);
 
       const botMessage: ChatMessage = {
         query: response.query,
@@ -147,18 +137,14 @@ export default function ChatPage() {
       };
 
       // Update chat state with new session ID and messages
-      setChatState(prev => {
-        console.log('Updating chat state with new session ID:', response.session_id);
-        return {
-          ...prev,
-          messages: [...prev.messages, botMessage],
-          sessionId: response.session_id,
-          isLoading: false,
-        };
-      });
+      setChatState(prev => ({
+        ...prev,
+        messages: [...prev.messages, botMessage],
+        sessionId: response.session_id,
+        isLoading: false,
+      }));
 
       // Force a refresh of the session list
-      console.log('Dispatching session update event...');
       const event = new CustomEvent('sessionUpdated', {
         detail: { sessionId: response.session_id }
       });
@@ -166,15 +152,20 @@ export default function ChatPage() {
       
       // Also fetch sessions directly after a short delay to ensure backend has processed the update
       setTimeout(() => {
-        console.log('Triggering delayed session refresh...');
         window.dispatchEvent(new CustomEvent('sessionUpdated'));
       }, 1000);
-    } catch (error) {
-      console.error('Error in handleSubmit:', error);
+    } catch (err) {
+      console.error('Error in handleSubmit:', err);
+      let errorMessage = 'An error occurred';
+      if (err instanceof Error) {
+        errorMessage = err.message;
+      } else if (err instanceof ZodError) {
+        errorMessage = err.errors[0]?.message || 'Invalid message format';
+      }
       setChatState(prev => ({
         ...prev,
         isLoading: false,
-        error: error instanceof Error ? error.message : 'An error occurred',
+        error: errorMessage,
       }));
     }
   };

@@ -5,29 +5,43 @@ import { useRouter } from 'next/navigation';
 import { env } from '@/utils/env';
 import Cookies from 'js-cookie';
 import { useAuth } from '@/contexts/AuthContext';
+import { registerSchema, type RegisterSchema } from '@/lib/validations/auth';
+import { ZodError } from 'zod';
+
+interface FormErrors extends Partial<Record<keyof RegisterSchema, string>> {
+    form?: string;
+}
 
 export default function RegisterForm() {
-    const [username, setUsername] = useState('');
-    const [email, setEmail] = useState('');
-    const [password, setPassword] = useState('');
-    const [verifyPassword, setVerifyPassword] = useState('');
-    const [error, setError] = useState('');
+    const [formData, setFormData] = useState<RegisterSchema>({
+        username: '',
+        email: '',
+        password: '',
+        verifyPassword: '',
+    });
+    const [errors, setErrors] = useState<FormErrors>({});
     const [isLoading, setIsLoading] = useState(false);
     const router = useRouter();
     const { setIsAuthenticated } = useAuth();
 
+    const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const { name, value } = e.target;
+        setFormData(prev => ({ ...prev, [name]: value }));
+        // Clear error when user starts typing
+        if (errors[name as keyof RegisterSchema]) {
+            setErrors(prev => ({ ...prev, [name]: '' }));
+        }
+    };
+
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        setError('');
-
-        if (password !== verifyPassword) {
-            setError('Passwords do not match');
-            return;
-        }
-
-        setIsLoading(true);
+        setErrors({});
 
         try {
+            // Validate form data
+            const validatedData = registerSchema.parse(formData);
+            setIsLoading(true);
+
             const response = await fetch(`/api/auth/register`, {
                 method: 'POST',
                 headers: {
@@ -35,9 +49,9 @@ export default function RegisterForm() {
                 },
                 credentials: 'include',
                 body: JSON.stringify({
-                    username,
-                    email,
-                    password,
+                    username: validatedData.username,
+                    email: validatedData.email,
+                    password: validatedData.password,
                     role: 'user',
                 }),
             });
@@ -61,7 +75,18 @@ export default function RegisterForm() {
             // Redirect to chat page
             router.push('/chat');
         } catch (err) {
-            setError(err instanceof Error ? err.message : 'Registration failed');
+            if (err instanceof Error) {
+                setErrors({ form: err.message });
+            } else if (err instanceof ZodError) {
+                // Handle Zod validation errors
+                const validationErrors: FormErrors = {};
+                err.errors.forEach((error) => {
+                    if (error.path[0]) {
+                        validationErrors[error.path[0] as keyof RegisterSchema] = error.message;
+                    }
+                });
+                setErrors(validationErrors);
+            }
         } finally {
             setIsLoading(false);
         }
@@ -72,9 +97,9 @@ export default function RegisterForm() {
             <form onSubmit={handleSubmit} className="bg-white/80 rounded-lg shadow-md p-8 space-y-6">
                 <h2 className="text-2xl font-semibold text-gray-800 mb-6">Create Account</h2>
                 
-                {error && (
+                {errors.form && (
                     <div className="bg-red-50 text-red-500 p-3 rounded-md">
-                        {error}
+                        {errors.form}
                     </div>
                 )}
 
@@ -87,12 +112,14 @@ export default function RegisterForm() {
                             type="text"
                             id="username"
                             name="username"
-                            required
-                            value={username}
-                            onChange={(e) => setUsername(e.target.value)}
-                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-black"
+                            value={formData.username}
+                            onChange={handleChange}
+                            className={`w-full px-3 py-2 border ${errors.username ? 'border-red-500' : 'border-gray-300'} rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-black`}
                             placeholder="Choose a username"
                         />
+                        {errors.username && (
+                            <p className="mt-1 text-sm text-red-500">{errors.username}</p>
+                        )}
                     </div>
 
                     <div>
@@ -103,12 +130,14 @@ export default function RegisterForm() {
                             type="email"
                             id="email"
                             name="email"
-                            required
-                            value={email}
-                            onChange={(e) => setEmail(e.target.value)}
-                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-black"
+                            value={formData.email}
+                            onChange={handleChange}
+                            className={`w-full px-3 py-2 border ${errors.email ? 'border-red-500' : 'border-gray-300'} rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-black`}
                             placeholder="Enter your email"
                         />
+                        {errors.email && (
+                            <p className="mt-1 text-sm text-red-500">{errors.email}</p>
+                        )}
                     </div>
 
                     <div>
@@ -119,12 +148,14 @@ export default function RegisterForm() {
                             type="password"
                             id="password"
                             name="password"
-                            required
-                            value={password}
-                            onChange={(e) => setPassword(e.target.value)}
-                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-black"
+                            value={formData.password}
+                            onChange={handleChange}
+                            className={`w-full px-3 py-2 border ${errors.password ? 'border-red-500' : 'border-gray-300'} rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-black`}
                             placeholder="Create a password"
                         />
+                        {errors.password && (
+                            <p className="mt-1 text-sm text-red-500">{errors.password}</p>
+                        )}
                     </div>
 
                     <div>
@@ -135,12 +166,14 @@ export default function RegisterForm() {
                             type="password"
                             id="verifyPassword"
                             name="verifyPassword"
-                            required
-                            value={verifyPassword}
-                            onChange={(e) => setVerifyPassword(e.target.value)}
-                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-black"
+                            value={formData.verifyPassword}
+                            onChange={handleChange}
+                            className={`w-full px-3 py-2 border ${errors.verifyPassword ? 'border-red-500' : 'border-gray-300'} rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-black`}
                             placeholder="Confirm your password"
                         />
+                        {errors.verifyPassword && (
+                            <p className="mt-1 text-sm text-red-500">{errors.verifyPassword}</p>
+                        )}
                     </div>
                 </div>
 

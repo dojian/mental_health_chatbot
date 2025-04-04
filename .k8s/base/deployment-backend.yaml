@@ -31,7 +31,7 @@ spec:
             - containerPort: 8001
           env: 
             - name: CORS_ORIGINS
-              value: "http://frontend-service:3000,http://localhost:3000,http://localhost:8001,http://localhost,http://localhost:80,*"
+              value: "http://frontend-service:3000,http://localhost:3000,http://localhost:8001"
           readinessProbe:
             httpGet:
               scheme: HTTP

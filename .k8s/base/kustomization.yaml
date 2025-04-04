@@ -9,4 +9,3 @@ resources:
   - service-backend.yaml
   - service-frontend.yaml
   - service-redis.yaml
-  # - ingress.yaml

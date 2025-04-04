@@ -43,7 +43,7 @@ export default function ChatPage() {
       const token = Cookies.get(env.jwtStorageKey);
       
       // Submit pre-chat survey with disclaimer acceptance
-      const response = await fetch(`${env.apiUrl}/v1/pre-chat-survey`, {
+      const response = await fetch(`/api/v1/pre-chat-survey`, {
         method: 'POST',
         credentials: 'include',
         headers: {

@@ -104,18 +104,15 @@ export default async function About() {
             <section>
                 <h2 className="text-2xl font-semibold mb-6 text-gray-800">Acknowledgements</h2>
                 <div className="bg-white/80 rounded-lg p-6 shadow-lg space-y-6">
-                <p className="text-gray-700 mb-4">
-                  
-                We would like to acknowledge the following mental health professionals who gave feedback and helped develop the mental-wellness resources.  
-                <br /><br />
-                   <ul>
-                    <li>Nikkolson Ang (M.S.) - Associate Marriage and Family Therapist</li>
-                    <li>Cassandra Aguirre (M.A.) - School Psychologist</li>
-                   </ul>
-
-                </p>
-
-
+                    <div className="text-gray-700">
+                        <p className="mb-4">
+                            We would like to acknowledge the following mental health professionals who gave feedback and helped develop the mental-wellness resources.
+                        </p>
+                        <ul className="list-disc pl-6 space-y-2">
+                            <li>Nikkolson Ang (M.S.) - Associate Marriage and Family Therapist</li>
+                            <li>Cassandra Aguirre (M.A.) - School Psychologist</li>
+                        </ul>
+                    </div>
                 </div>
             </section>
         </>

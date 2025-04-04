@@ -33,7 +33,7 @@ export default function SessionSelector({ onSessionSelect, currentSessionId }: S
       }
 
       console.log('Fetching recent sessions...');
-      const response = await fetch(`${env.apiUrl}/v1/chat/recent-sessions?limit=2`, {
+      const response = await fetch(`/api/v1/chat/recent-sessions?limit=2`, {
         headers: {
           'Authorization': `Bearer ${token}`,
         },

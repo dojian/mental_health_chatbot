@@ -5,18 +5,19 @@ namespace: genzen
 resources:
   - ./namespace.yaml
   - ../../base
+  - ./virtual-service.yaml
 
 secretGenerator:
   - name: backend-secrets
     envs:
-      - .env.dev.backend
+      - .env.prod.backend
 
 images:
   - name: genzen-backend
-    newName: genzen-backend
+    newName: 975049977273.dkr.ecr.us-east-2.amazonaws.com/genzen/backend
     newTag: v1.2
   - name: genzen-frontend
-    newName: genzen-frontend
+    newName: 975049977273.dkr.ecr.us-east-2.amazonaws.com/genzen/frontend
     newTag: v1.2
 
 patches:
@@ -24,14 +25,8 @@ patches:
   target:
     kind: Deployment
     name: backend-deployment
-- path: service-frontend-patch.yaml
-  target:
-    kind: Service
-    name: frontend-service
-    labelSelector: app=genzen-frontend
-### Test backend service if set it was correctly via minikube tunnel
-# - path: service-backend-patch.yaml
+# - path: service-frontend-patch.yaml
 #   target:
 #     kind: Service
-#     name: backend-service
-#     labelSelector: app=backend-service
+#     name: frontend-service
+#     labelSelector: app=genzen-frontend

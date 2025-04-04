@@ -5,7 +5,7 @@ metadata:
   name: backend-service
   namespace: genzen
   labels:
-    app: backend-service
+    app: genzen-backend
 spec:
   type: ClusterIP
   ports:

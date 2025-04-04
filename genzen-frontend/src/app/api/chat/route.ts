@@ -15,7 +15,7 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     console.log('Chat request body:', JSON.stringify(body, null, 2));
 
-    const response = await fetch(`${env.apiUrl}/v1/agent-chat`, {
+    const response = await fetch(`/v1/agent-chat`, {
       method: 'POST',
       headers: {
         'Authorization': authHeader,

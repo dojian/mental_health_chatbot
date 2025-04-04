@@ -4,19 +4,19 @@ metadata:
   name: frontend-deployment
   namespace: genzen
   labels:
-    app: frontend
+    app: genzen-frontend
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: frontend
+      app: genzen-frontend
   template:
     metadata:
       labels:
-        app: frontend
+        app: genzen-frontend
     spec:
       containers:
-        - name: frontend
+        - name: genzen-frontend
           image: genzen-frontend:v01
           imagePullPolicy: IfNotPresent
           resources:
@@ -30,7 +30,7 @@ spec:
             - containerPort: 3000
           env:
             - name: NEXT_PUBLIC_API_URL
-              value: "http://backend-service:8001"
+              value: "/api"
           readinessProbe:
             httpGet:
               path: /

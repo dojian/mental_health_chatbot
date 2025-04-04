@@ -12,7 +12,7 @@ export async function POST(request: Request) {
     }
 
     const body = await request.json();
-    const response = await fetch(`${env.apiUrl}/v1/pre-chat-survey`, {
+    const response = await fetch(`/v1/pre-chat-survey`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

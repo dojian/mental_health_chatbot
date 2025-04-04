@@ -2,6 +2,7 @@ FROM node:18-alpine AS base
 WORKDIR /app
 ENV NEXT_TELEMETRY_DISABLED=1
 
+# Define build arguments
 ARG NEXT_PUBLIC_API_URL
 ARG NEXT_PUBLIC_APP_ENV=staging
 
@@ -12,6 +13,7 @@ RUN npm ci && npm cache clean --force
 FROM dependencies AS builder
 COPY . .
 ENV NODE_ENV=production
+# Pass build arguments to environment variables during build
 ENV NEXT_PUBLIC_APP_ENV=${NEXT_PUBLIC_APP_ENV}
 ENV NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL}
 
@@ -33,15 +35,18 @@ RUN apk add --no-cache curl && \
 RUN addgroup --system --gid 1001 nodejs && \
     adduser --system --uid 1001 nextjs
 
-# Set production environment variables
+# Set production environment
 ENV NODE_ENV=production
-ENV NEXT_PUBLIC_APP_ENV=${NEXT_PUBLIC_APP_ENV}
-ENV NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL}
-
 ENV PORT=3000
 ENV HOSTNAME="0.0.0.0"
 ENV NEXT_SHARP_PATH=/app/node_modules/sharp
 
+# Create the env file with build arguments
+ARG NEXT_PUBLIC_API_URL
+ARG NEXT_PUBLIC_APP_ENV
+RUN echo "NEXT_PUBLIC_APP_ENV=${NEXT_PUBLIC_APP_ENV}" > .env.production && \
+    echo "NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL}" >> .env.production && \
+    echo "NEXT_PUBLIC_JWT_STORAGE_KEY=token" >> .env.production
 
 # Copy built assets
 COPY --from=builder /app/public ./public

@@ -25,7 +25,7 @@ export default function LoginForm() {
             formData.append('username', username);
             formData.append('password', password);
             
-            console.log('Sending login request to:', `${env.apiUrl}/auth/login`);
+            // console.log('Sending login request to:', `${env.apiUrl}/auth/login`);
 
             const response = await fetch(`/api/auth/login`, {
                 method: 'POST',

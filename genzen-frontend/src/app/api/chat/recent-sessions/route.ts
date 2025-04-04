@@ -14,7 +14,7 @@ export async function GET(request: NextRequest) {
     }
 
     console.log('Fetching recent sessions from backend...');
-    const response = await fetch(`${env.apiUrl}/v1/chat/recent-sessions?limit=2`, {
+    const response = await fetch(`/v1/chat/recent-sessions?limit=2`, {
       headers: {
         'Authorization': authHeader,
       },

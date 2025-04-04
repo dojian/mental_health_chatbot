@@ -19,24 +19,24 @@ secretGenerator:
 images:
   - name: genzen-backend
     newName: genzen-backend
-    newTag: v03
-  # - name: frontend
-  #   newName: genzen-frontend
-  #   newTag: v05
+    newTag: url
+  - name: genzen-frontend
+    newName: genzen-frontend
+    newTag: url
 
 patches:
 - path: deployment-patch.yaml
   target:
     kind: Deployment
     name: backend-deployment
-# - path: service-frontend-patch.yaml
-#   target:
-#     kind: Service
-#     name: frontend-service
-#     labelSelector: app=frontend-
-### Test backend service if set it was correctly via minikube tunnel
-- path: service-backend-patch.yaml
+- path: service-frontend-patch.yaml
   target:
     kind: Service
-    name: backend-service
-    labelSelector: app=backend-service
+    name: frontend-service
+    labelSelector: app=genzen-frontend
+### Test backend service if set it was correctly via minikube tunnel
+# - path: service-backend-patch.yaml
+#   target:
+#     kind: Service
+#     name: backend-service
+#     labelSelector: app=backend-service

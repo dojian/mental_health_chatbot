@@ -8,7 +8,7 @@ export async function logout() {
         if (!token) return;
 
         // Call the logout endpoint
-        await fetch(`${env.apiUrl}/auth/logout`, {
+        await fetch(`/api/auth/logout`, {
             method: 'POST',
             headers: {
                 'Authorization': `Bearer ${token}`,

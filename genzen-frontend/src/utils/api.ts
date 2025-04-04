@@ -2,8 +2,6 @@ import { ChatRequest, ChatResponse } from '@/types/chat';
 import { env } from './env';
 import Cookies from 'js-cookie';
 
-const API_BASE_URL = `${env.apiUrl}/v1`;
-
 export async function sendChatMessage(request: ChatRequest): Promise<ChatResponse> {
   console.log('Preparing chat message request:', JSON.stringify(request, null, 2));
   
@@ -14,9 +12,9 @@ export async function sendChatMessage(request: ChatRequest): Promise<ChatRespons
     throw new Error('No authentication token found');
   }
 
-  console.log('Sending request to:', `${API_BASE_URL}/agent-chat`);
+  console.log('Sending request to:', `/api/chat`);
   
-  const response = await fetch(`${API_BASE_URL}/agent-chat`, {
+  const response = await fetch(`/api/chat`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',

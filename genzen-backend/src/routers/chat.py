@@ -194,100 +194,100 @@ async def agent_chat(
             detail=f"Error in agent chat: {str(e)}"
         )
 
-@router.post("/chat")
-async def chat(
-    request: ChatRequest,
-    session: Session = Depends(get_session),
-    current_user: GenZenUser = Depends(get_current_user),
-):
-    """
-    Handles user queries, stores them in ChatHistory, sends them to OpenAI,
-    and stores and returns both the query and OpenAI's response.
-    """
-    try:
+# @router.post("/chat")
+# async def chat(
+#     request: ChatRequest,
+#     session: Session = Depends(get_session),
+#     current_user: GenZenUser = Depends(get_current_user),
+# ):
+#     """
+#     Handles user queries, stores them in ChatHistory, sends them to OpenAI,
+#     and stores and returns both the query and OpenAI's response.
+#     """
+#     try:
 
-        # Step 1: Retrieve or create a session
-        if request.session_id:
-            chat_session = session.query(ChatSession).filter(
-                ChatSession.session_id == request.session_id,
-                ChatSession.user_id == current_user.id,
-            ).first()
-            if not chat_session:
-                raise HTTPException(
-                    status_code=status.HTTP_404_NOT_FOUND,
-                    detail="Chat session not found"
-                )
-            session_id = request.session_id
-        else:
-            session_id = f"{current_user.id}-{uuid.uuid4().hex}"
-            chat_session = ChatSession(
-                session_id=session_id,
-                user_id=current_user.id,
-            )
-            session.add(chat_session)
-            session.commit()
+#         # Step 1: Retrieve or create a session
+#         if request.session_id:
+#             chat_session = session.query(ChatSession).filter(
+#                 ChatSession.session_id == request.session_id,
+#                 ChatSession.user_id == current_user.id,
+#             ).first()
+#             if not chat_session:
+#                 raise HTTPException(
+#                     status_code=status.HTTP_404_NOT_FOUND,
+#                     detail="Chat session not found"
+#                 )
+#             session_id = request.session_id
+#         else:
+#             session_id = f"{current_user.id}-{uuid.uuid4().hex}"
+#             chat_session = ChatSession(
+#                 session_id=session_id,
+#                 user_id=current_user.id,
+#             )
+#             session.add(chat_session)
+#             session.commit()
 
-        # Step 2: Retrieve existing chat history for this session
-        existing_messages = (
-            session.query(ChatHistory)
-            .filter(ChatHistory.session_id == session_id)
-            .order_by(ChatHistory.timestamp)
-            .all()
-        )
+#         # Step 2: Retrieve existing chat history for this session
+#         existing_messages = (
+#             session.query(ChatHistory)
+#             .filter(ChatHistory.session_id == session_id)
+#             .order_by(ChatHistory.timestamp)
+#             .all()
+#         )
 
-        # Format history for OpenAI
-        messages = [
-            {"role": message.role, "content": message.message}
-            for message in existing_messages
-        ]
+#         # Format history for OpenAI
+#         messages = [
+#             {"role": message.role, "content": message.message}
+#             for message in existing_messages
+#         ]
 
-        # Add user's new query to the message list
-        messages.append({"role": "user", "content": request.query})
+#         # Add user's new query to the message list
+#         messages.append({"role": "user", "content": request.query})
 
-        # Step 3: Send query + history to OpenAI and get response
-        try:
-            openai_response = model(messages)
-            assistant_msg_txt = openai_response.content
-        except Exception as e:
-            raise HTTPException(
-                status_code=500,
-                detail=f"Error communicating with OpenAI: {str(e)}"
-            )
+#         # Step 3: Send query + history to OpenAI and get response
+#         try:
+#             openai_response = model(messages)
+#             assistant_msg_txt = openai_response.content
+#         except Exception as e:
+#             raise HTTPException(
+#                 status_code=500,
+#                 detail=f"Error communicating with OpenAI: {str(e)}"
+#             )
 
-        # Step 4: Log user's query and assistant's response in ChatHistory
-        # Serialize metadata with datetime handling
-        metadata = request.session_metadata.model_dump()
+#         # Step 4: Log user's query and assistant's response in ChatHistory
+#         # Serialize metadata with datetime handling
+#         metadata = request.session_metadata.model_dump()
         
-        user_message = ChatHistory(
-            session_id=session_id,
-            user_id=current_user.id,
-            role="user",
-            message=request.query,
-            chat_metadata=metadata
-        )
+#         user_message = ChatHistory(
+#             session_id=session_id,
+#             user_id=current_user.id,
+#             role="user",
+#             message=request.query,
+#             chat_metadata=metadata
+#         )
         
-        assistant_message = ChatHistory(
-            session_id=session_id,
-            user_id=current_user.id,
-            role="assistant",
-            message=assistant_msg_txt,
-            chat_metadata={}  # Empty metadata for assistant messages
-        )
+#         assistant_message = ChatHistory(
+#             session_id=session_id,
+#             user_id=current_user.id,
+#             role="assistant",
+#             message=assistant_msg_txt,
+#             chat_metadata={}  # Empty metadata for assistant messages
+#         )
         
-        session.add_all([user_message, assistant_message])
-        session.commit()
+#         session.add_all([user_message, assistant_message])
+#         session.commit()
 
-        return {
-            "session_id": session_id,
-            "query": request.query,
-            "response": assistant_msg_txt,
-        }
+#         return {
+#             "session_id": session_id,
+#             "query": request.query,
+#             "response": assistant_msg_txt,
+#         }
 
-    except Exception as e:
-        raise HTTPException(
-            status_code=500,
-            detail=f"Error in chat endpoint: {str(e)}"
-        )
+#     except Exception as e:
+#         raise HTTPException(
+#             status_code=500,
+#             detail=f"Error in chat endpoint: {str(e)}"
+#         )
 
 @router.post("/pre-chat-survey")
 async def submit_pre_chat_survey(

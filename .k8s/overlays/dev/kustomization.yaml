@@ -1,0 +1,42 @@
+---
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: genzen
+resources:
+  - ./namespace.yaml
+  - ../../base
+
+secretGenerator:
+  - name: backend-secrets
+    envs:
+      - .env.dev.backend
+
+# configMapGenerator:
+#   - name: frontend-env-config
+#     envs:
+#       - .env.production.local
+
+images:
+  - name: genzen-backend
+    newName: genzen-backend
+    newTag: url
+  - name: genzen-frontend
+    newName: genzen-frontend
+    newTag: url
+
+patches:
+- path: deployment-patch.yaml
+  target:
+    kind: Deployment
+    name: backend-deployment
+- path: service-frontend-patch.yaml
+  target:
+    kind: Service
+    name: frontend-service
+    labelSelector: app=genzen-frontend
+### Test backend service if set it was correctly via minikube tunnel
+# - path: service-backend-patch.yaml
+#   target:
+#     kind: Service
+#     name: backend-service
+#     labelSelector: app=backend-service

@@ -3,7 +3,9 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: redis-deployment
-  namespace: genzen-backend
+  namespace: genzen
+  labels:
+    app: redis-server
 spec:
   replicas: 1
   selector:

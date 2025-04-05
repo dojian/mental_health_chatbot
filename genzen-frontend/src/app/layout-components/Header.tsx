@@ -36,6 +36,7 @@ export default function Header() {
     { href: '/about', label: 'About' },
     ...(isAuthenticated ? [{ href: '/chat', label: 'Chat' }] : []),
     { href: '/privacy', label: 'Privacy' },
+    { href: '/terms', label: 'Terms' },
   ];
 
   const authLinks = isAuthenticated ? (

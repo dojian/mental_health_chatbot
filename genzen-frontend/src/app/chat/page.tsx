@@ -74,7 +74,7 @@ export default function ChatPage() {
   };
 
   const handleSessionSelect = (sessionId: string | null) => {
-    console.log('Session selected:', sessionId);
+    // console.log('Session selected:', sessionId);
     setChatState(prev => ({
       ...prev,
       sessionId,

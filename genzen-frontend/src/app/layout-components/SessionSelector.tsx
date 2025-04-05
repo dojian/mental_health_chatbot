@@ -19,7 +19,7 @@ export default function SessionSelector({ onSessionSelect, currentSessionId }: S
                 throw new Error('No authentication token found');
             }
 
-            console.log('Fetching sessions with token:', token ? 'token exists' : 'no token');
+            // console.log('Fetching sessions with token:', token ? 'token exists' : 'no token');
             
             const response = await fetch('/api/v1/chat/recent-sessions?limit=2', {
                 headers: {
@@ -27,16 +27,16 @@ export default function SessionSelector({ onSessionSelect, currentSessionId }: S
                 },
             });
 
-            console.log('Response status:', response.status);
-            console.log('Response headers:', Object.fromEntries(response.headers.entries()));
+            // console.log('Response status:', response.status);
+            // console.log('Response headers:', Object.fromEntries(response.headers.entries()));
             
             const responseText = await response.text();
-            console.log('Raw response text:', responseText);
+            // console.log('Raw response text:', responseText);
             
             let responseData;
             try {
                 responseData = JSON.parse(responseText);
-                console.log('Parsed response data:', responseData);
+                // console.log('Parsed response data:', responseData);
             } catch (e) {
                 console.error('Failed to parse response as JSON:', e);
                 throw new Error('Invalid JSON response');
@@ -55,7 +55,7 @@ export default function SessionSelector({ onSessionSelect, currentSessionId }: S
                 id: session.session_id,
                 name: session.session_name,
             }));
-            console.log('Valid sessions:', validSessions);
+            // console.log('Valid sessions:', validSessions);
             setSessions(validSessions);
         } catch (error) {
             console.error('Error in fetchSessions:', error);
@@ -144,24 +144,5 @@ export default function SessionSelector({ onSessionSelect, currentSessionId }: S
                 )}
             </div>
         </div>
-
-        // <div className="space-y-4">
-        //     <h2 className="text-lg font-semibold mb-4">Chat Sessions</h2>
-        //     <button
-        //         onClick={() => onSessionSelect(null)}
-        //         className={`w-full text-left px-4 py-2 rounded-lg ${!currentSessionId ? 'bg-blue-100' : 'hover:bg-gray-100'}`}
-        //     >
-        //         New Chat
-        //     </button>
-        //     {sessions.map((session) => (
-        //         <button
-        //             key={session.id}
-        //             onClick={() => onSessionSelect(session.id)}
-        //             className={`w-full text-left px-4 py-2 rounded-lg ${currentSessionId === session.id ? 'bg-blue-100' : 'hover:bg-gray-100'}`}
-        //         >
-        //             {session.name}
-        //         </button>
-        //     ))}
-        // </div>
     );
 } 

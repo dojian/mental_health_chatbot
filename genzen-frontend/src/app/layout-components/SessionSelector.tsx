@@ -19,27 +19,46 @@ export default function SessionSelector({ onSessionSelect, currentSessionId }: S
                 throw new Error('No authentication token found');
             }
 
-            const response = await fetch('/api/sessions', {
+            console.log('Fetching sessions with token:', token ? 'token exists' : 'no token');
+            
+            const response = await fetch('/api/v1/chat/recent-sessions?limit=2', {
                 headers: {
                     'Authorization': `Bearer ${token}`,
                 },
             });
 
-            if (!response.ok) {
-                throw new Error('Failed to fetch sessions');
+            console.log('Response status:', response.status);
+            console.log('Response headers:', Object.fromEntries(response.headers.entries()));
+            
+            const responseText = await response.text();
+            console.log('Raw response text:', responseText);
+            
+            let responseData;
+            try {
+                responseData = JSON.parse(responseText);
+                console.log('Parsed response data:', responseData);
+            } catch (e) {
+                console.error('Failed to parse response as JSON:', e);
+                throw new Error('Invalid JSON response');
             }
 
-            const { data } = await response.json();
-            if (!Array.isArray(data)) {
+            if (!response.ok) {
+                throw new Error(`Failed to fetch sessions: ${response.status} ${response.statusText}`);
+            }
+
+            if (!responseData || !Array.isArray(responseData)) {
+                console.error('Invalid response format:', responseData);
                 throw new Error('Invalid response format');
             }
 
-            const validSessions = data.map((session: any) => ({
-                id: session.id,
-                name: session.name,
+            const validSessions = responseData.map((session: any) => ({
+                id: session.session_id,
+                name: session.session_name,
             }));
+            console.log('Valid sessions:', validSessions);
             setSessions(validSessions);
         } catch (error) {
+            console.error('Error in fetchSessions:', error);
             setError(error instanceof Error ? error.message : 'Failed to fetch sessions');
             setSessions([]);
         } finally {
@@ -47,9 +66,32 @@ export default function SessionSelector({ onSessionSelect, currentSessionId }: S
         }
     };
 
+    // useEffect(() => {
+    //     fetchSessions();
+    // }, []);
+
+    // Fetch sessions when component mounts
     useEffect(() => {
+        console.log('SessionSelector mounted, fetching sessions...');
         fetchSessions();
+
+        // Listen for session updates
+        const handleSessionUpdate = () => {
+        console.log('Session update event received, refreshing sessions...');
+        fetchSessions();
+        };
+
+        window.addEventListener('sessionUpdated', handleSessionUpdate);
+
+        return () => {
+        window.removeEventListener('sessionUpdated', handleSessionUpdate);
+        };
     }, []);
+
+  const handleNewChat = () => {
+    console.log('Starting new chat...');
+    onSessionSelect(null);
+  };
 
     if (error) {
         return (
@@ -68,23 +110,58 @@ export default function SessionSelector({ onSessionSelect, currentSessionId }: S
     }
 
     return (
-        <div className="space-y-4">
-            <h2 className="text-lg font-semibold mb-4">Chat Sessions</h2>
-            <button
-                onClick={() => onSessionSelect(null)}
-                className={`w-full text-left px-4 py-2 rounded-lg ${!currentSessionId ? 'bg-blue-100' : 'hover:bg-gray-100'}`}
-            >
-                New Chat
-            </button>
-            {sessions.map((session) => (
+        <div className="bg-white rounded-lg shadow-md p-4 mb-4">
+
+            {/* Button to create a new chat */}
+            <div className="flex justify-between items-center mb-4">
+                <h2 className="text-lg font-semibold text-gray-800">Chat Sessions</h2>
                 <button
-                    key={session.id}
-                    onClick={() => onSessionSelect(session.id)}
-                    className={`w-full text-left px-4 py-2 rounded-lg ${currentSessionId === session.id ? 'bg-blue-100' : 'hover:bg-gray-100'}`}
+                onClick={handleNewChat}
+                className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
                 >
-                    {session.name}
+                 New Chat
                 </button>
-            ))}
+            </div>
+
+            {/* List of chat sessions */}
+            <div className="space-y-2">
+                {sessions.length === 0 ? (
+                <p className="text-gray-500 text-center py-4">No chat sessions found</p>
+                ) : (
+                sessions.map((session) => (
+                    <button
+                        key={session.id}
+                        onClick={() => onSessionSelect(session.id)}
+                        className={`w-full text-left p-3 rounded-lg transition-colors ${
+                            currentSessionId === session.id
+                            ? 'bg-blue-100 text-blue-800'
+                            : 'hover:bg-gray-100 text-gray-800'
+                        }`}
+                    >
+                    <div className="font-medium">{session.name}</div>
+                    </button>
+                ))
+                )}
+            </div>
         </div>
+
+        // <div className="space-y-4">
+        //     <h2 className="text-lg font-semibold mb-4">Chat Sessions</h2>
+        //     <button
+        //         onClick={() => onSessionSelect(null)}
+        //         className={`w-full text-left px-4 py-2 rounded-lg ${!currentSessionId ? 'bg-blue-100' : 'hover:bg-gray-100'}`}
+        //     >
+        //         New Chat
+        //     </button>
+        //     {sessions.map((session) => (
+        //         <button
+        //             key={session.id}
+        //             onClick={() => onSessionSelect(session.id)}
+        //             className={`w-full text-left px-4 py-2 rounded-lg ${currentSessionId === session.id ? 'bg-blue-100' : 'hover:bg-gray-100'}`}
+        //         >
+        //             {session.name}
+        //         </button>
+        //     ))}
+        // </div>
     );
 } 

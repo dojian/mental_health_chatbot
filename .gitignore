@@ -17,6 +17,7 @@ start_backend.sh
 .vscode
 .env-docker
 .env.*.backend
+.env.*
 
 #Nextjs
 # Dependencies

@@ -17,7 +17,7 @@ images:
     newTag: v1.2
   - name: genzen-frontend
     newName: genzen-frontend
-    newTag: v1.2
+    newTag: v1.3
 
 patches:
 - path: deployment-patch.yaml

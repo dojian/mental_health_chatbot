@@ -33,6 +33,7 @@ export default function Header() {
 
   const navLinks = [
     { href: '/', label: 'Home' },
+    { href: '/resources', label: 'Resources' },
     { href: '/about', label: 'About' },
     ...(isAuthenticated ? [{ href: '/chat', label: 'Chat' }] : []),
     { href: '/privacy', label: 'Privacy' },

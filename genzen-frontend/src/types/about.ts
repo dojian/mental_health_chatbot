@@ -38,6 +38,16 @@ export interface Privacy {
   }[];
 } 
 
+export interface Resources {
+  title: string;
+  lastUpdated: string;
+  sections: {
+    title: string;
+    content: string;
+    source: string;
+  }[];
+}
+
 export interface Acknowledgement {
   description: string;
   helpers: {

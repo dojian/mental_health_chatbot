@@ -1,7 +1,8 @@
 import boto3
 import pickle
 import cohere
-from typing import List
+from typing import List, Callable
+from langchain_core.tools import tool
 from langchain_qdrant import QdrantVectorStore
 from langchain_community.retrievers import BM25Retriever
 from langchain.retrievers import EnsembleRetriever
@@ -9,7 +10,6 @@ from langchain.schema import Document
 from qdrant_client import QdrantClient
 from qdrant_client.models import VectorParams, Filter, FieldCondition, MatchAny
 from langchain_community.embeddings import FastEmbedEmbeddings
-
 
 from src.utils.config_setting import Settings
 
@@ -33,14 +33,8 @@ class RAGPipeline:
         self.bm25_weight = None
         self.qdrant_weight = None
     
-    def initialize_rag_pipeline(self, initial_k = 25, bm25_weight = 0.5, qdrant_weight = 0.5):
-        """Initializes the RAG pipeline by setting up BM25 and Qdrant-based retrievers.
-        
-        Args:
-            initial_k (int): Number of top documents to retrieve before reranking.
-            bm25_weight (float): Weight assigned to BM25 retriever in ensemble.
-            qdrant_weight (float): Weight assigned to Qdrant retriever in ensemble.
-        """
+    def initialize_embeddings(self):
+        """Downloads chunks from S3, loads them, and indexes into Qdrant if necessary."""
         s3 = boto3.client('s3')
 
         # Download the pre-chunked text document file from S3
@@ -53,13 +47,6 @@ class RAGPipeline:
         # Load the embeddings from the downloaded file
         with open('/tmp/text_chunks.pkl', 'rb') as f:
             self.chunks = pickle.load(f)
-        
-        self.initial_k = initial_k
-        self.bm25_weight = bm25_weight
-        self.qdrant_weight = qdrant_weight
-        # Setup BM25 retriever
-        bm25_retriever = BM25Retriever.from_documents(self.chunks)
-        bm25_retriever.k = self.initial_k #top k most relevant documents, as ranked by the BM25 score.
 
         # Setup vector retriever
         self.embeddings_model = FastEmbedEmbeddings(model_name=settings.EMBEDDING_MODEL)
@@ -76,7 +63,7 @@ class RAGPipeline:
             print("⚠️ Collection does not exist. Creating new collection.")
             self.qdrant_client.create_collection(
                 collection_name="my_collection",
-                vectors_config=VectorParams(size=768, distance='Cosine')  # Adjusted size to 768 based on your embeddings model
+                vectors_config=VectorParams(size=768, distance='Cosine')
             )
             print("✅ Created new Qdrant collection with updated dimensions")
             add_documents = True
@@ -94,10 +81,24 @@ class RAGPipeline:
             self.vector_store.add_documents(self.chunks)
         
         print("# docs in Qdrant collection: ", self.qdrant_client.get_collection(collection_name="my_collection").points_count)
+    
+    def initialize_retrievers(self, initial_k = 25, bm25_weight = 0.5, qdrant_weight = 0.5):
+        """Initializes the hybrid retriever pipeline after embeddings have been loaded and stored."""
+        assert self.chunks is not None, "Chunks must be loaded before initializing retrievers."
+        
+        self.initial_k = initial_k
+        self.bm25_weight = bm25_weight
+        self.qdrant_weight = qdrant_weight
+        
+        # Setup BM25 retriever
+        bm25_retriever = BM25Retriever.from_documents(self.chunks)
+        bm25_retriever.k = self.initial_k #top k most relevant documents, as ranked by the BM25 score.
+        print(f"BM25 retriever setup with k={self.initial_k}")
 
         # Setup the Qdrant retriever
         qdrant_retriever = self.vector_store.as_retriever(search_kwargs={"k": self.initial_k})
-        
+        print(f"Qdrant retriever setup with k={self.initial_k}")
+
         # Fusion of retrievers BM25+ vector DB
         print("Setting up the retriever ensemble (BM25 + Qdrant)...")
 
@@ -107,9 +108,16 @@ class RAGPipeline:
         )
 
         self.base_retriever = fusion_retriever
-        self.cohere_client = cohere.Client(settings.COHERE_API_KEY)
+        # Check that the base retriever has been correctly set
+        if self.base_retriever:
+            print("✅ base_retriever has been initialized successfully.")
+        else:
+            print("❌ base_retriever is not initialized.")
 
-        print("RAG pipeline initialized with Qdrant + BM25 + RankFusion.")
+        self.cohere_client = cohere.Client(settings.COHERE_API_KEY)
+        print("Cohere client initialized.")
+
+        print("RAG retriever initialized with Qdrant and BM25 RankFusion.")
 
     # def filter_docs_by_category(self, selected_categories): 
     #     """Filters documents based on selected categories.
@@ -145,7 +153,6 @@ class RAGPipeline:
         print(f"Retrieved {len(initial_results)} docs, reranking top {final_k}...")
 
         documents = [doc.page_content for doc in initial_results]
-        print(documents[0][:200]) #debug
 
         # Step 2: Rerank using Cohere
         response = self.cohere_client.rerank(
@@ -164,21 +171,21 @@ class RAGPipeline:
             doc.page_content = doc.page_content.replace(doc.metadata["contextualized_content"], "").strip()
         return reranked_docs
 
-#test if the above class/functions work
-if __name__ == "__main__":
-    #Create instance of RAGPipeline class
-    rag_pipeline = RAGPipeline()
+# #test if the above class/functions work
+# if __name__ == "__main__":
+#     #Create instance of RAGPipeline class
+#     rag_pipeline = RAGPipeline()
     
-    # Initialize the RAG pipeline (loads data from S3, etc.)
-    rag_pipeline.initialize_rag_pipeline()
+#     # Initialize the RAG pipeline (loads data from S3, etc.)
+#     rag_pipeline.initialize_rag_pipeline()
 
-    # Test retrieve with rerank
-    query = "my major is finance. How do I find a mentor? I feel so behind and failing"
-    top_docs = rag_pipeline.retrieve_with_rerank(query, final_k=10)
+#     # Test retrieve with rerank
+#     query = "my major is finance. How do I find a mentor? I feel so behind and failing"
+#     top_docs = rag_pipeline.retrieve_with_rerank(query, final_k=10)
 
-    # Print the reranked documents
-    print("Top reranked documents:")
-    for doc in top_docs:
-        print(doc.page_content)
-        print("\n")
+#     # Print the reranked documents
+#     print("Top reranked documents:")
+#     for doc in top_docs:
+#         print(doc.page_content)
+#         print("\n")
     

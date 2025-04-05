@@ -60,7 +60,7 @@ def anonymize_pii(text: str) -> str:
 
     return mask_text(text, result)
 
-if __name__ == "__main__": 
+# if __name__ == "__main__": 
 
-    user_text = "My name is Jordan and I'm feeling overwhelmed with schoolwork. I feel like I'm the only Asian here sometimes, I want to go back to San Jose. How do I delete my account jordanfx97"
-    print(anonymize_pii(user_text))
+#     user_text = "My name is Jordan and I'm feeling overwhelmed with schoolwork. I feel like I'm the only Asian here sometimes, I want to go back to San Jose. How do I delete my account jordanfx97"
+#     print(anonymize_pii(user_text))

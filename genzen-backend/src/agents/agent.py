@@ -1,47 +1,46 @@
 import os, uuid
 from datetime import datetime
 from dotenv import load_dotenv
-from typing import Literal
+
 from langchain_core.messages import SystemMessage, HumanMessage
-from langchain_openai import ChatOpenAI, OpenAIEmbeddings
+from langchain_openai import ChatOpenAI
 from langgraph.graph import START, END, StateGraph, MessagesState
 from langgraph.prebuilt import tools_condition, ToolNode
 from src.connections.db import checkpointer, memory_store
 from src.agents.tools import mental_health, remember_information, recall_information
 from src.agents.classification_tools import predict_suicide_depression
-from src.agents.rag_hybrid_search import RAGPipeline
+from src.connections.lifespan import rag_pipeline
 from src.agents.pii_masker import anonymize_pii
 from src.utils.config_setting import Settings
     
-settings = Settings()
 load_dotenv()
+settings = Settings()
 
 model_name = os.getenv("OPENAI_MODEL_NAME")
 
-# Tool
-def ragpipeline(query:str):
+def rag_rerank(query: str):
     """
-    Executes the RAG (Retrieval-Augmented Generation) pipeline to retrieve and rerank relevant documents.
-
-    This function initializes the RAG pipeline and retrieves relevant documents using a hybrid retrieval approach 
-    (BM25 + Qdrant vector search). It then applies reranking to return the top `final_k` results.
+    Retrieves and reranks documents based on a user query using the RAG pipeline's 
+    `retrieve_with_rerank` method.
 
     Args:
-        query (str): The input query for which relevant documents should be retrieved.
+        query (str): The input query for which relevant documents are to be retrieved and reranked.
 
     Returns:
-        List[Document]: A list of reranked documents relevant to the query.
-    
-    Note:
-        - This function creates an instance of `RAGPipeline`.
-        - It calls `initialize_rag_pipeline()` to set up the retriever ensemble.
-        - It then invokes `retrieve_with_rerank(query, final_k=10)` to return the top results.
+        List[Document]: A list of top reranked documents based on the input query.
     """
-    pipeline = RAGPipeline() # Create an instance of RAGPipeline
-    pipeline.initialize_rag_pipeline()
-    return pipeline.retrieve_with_rerank(query, final_k=10)
+    # Ensure the base retriever is initialized by calling the initialization function
+    if rag_pipeline.base_retriever is None:
+        # Initialize retrievers manually if necessary
+        print("Base retriever is not initialized, initializing now...")
+        rag_pipeline.initialize_retrievers()  # Manually call this only if base_retriever is None
 
-tools = [mental_health,ragpipeline, remember_information, recall_information]
+    # Call retrieve_with_rerank
+    return rag_pipeline.retrieve_with_rerank(query)
+
+# Tool
+
+tools = [mental_health, rag_rerank, remember_information, recall_information]
 
 # Define LLM with bound tools
 llm = ChatOpenAI(model=model_name)
@@ -51,8 +50,8 @@ llm_with_tools = llm.bind_tools(tools)
 sys_msg_advice = SystemMessage(content="""You are a helpful student assistant tasked with mental health counseling. 
                                When counseling, make sure to use the **answer** directly from the mental_health tool output.
                                If the mental_health tool output includes 'Providing Suggestions' as counseling_strategy, 
-                               retrieve additional information using the ragpipeline tool. 
-                               If ragpipeline tool is called, answer the question(user_text) only based on the context information the ragpipeline tool provided.
+                               retrieve additional information using the rag_rerank tool. 
+                               If rag_rerank tool is called, answer the question(user_text) only based on the context information the rag_rerank tool provided.
                                Do NOT use bullet points in the answer. Answer should be in 5 sentences and use the key words in the user_text to start the answer.
                                """)
                                #use the predict_suicide_depression tool first to determine the depression class.
@@ -265,12 +264,12 @@ builder.add_edge("tools", "assistant")
 # Compile graph
 graph = builder.compile() #checkpointer=checkpointer
 
-if __name__ == "__main__": 
-    messages=[HumanMessage(content="My major is computer science. How do I find a mentor for career advice? Can you give me some suggestions?")]
-    #I am Lily. I feel sad about my calculus homework. I don't know if i will be about to understand the chain rule.
-    # Invoke graph
-    result=graph. invoke({"messages": messages})
+# if __name__ == "__main__": 
+#     messages=[HumanMessage(content="My major is computer science. How do I find a mentor for career advice? Can you give me some suggestions?")]
+#     #I am Lily. I feel sad about my calculus homework. I don't know if i will be about to understand the chain rule.
+#     # Invoke graph
+#     result=graph. invoke({"messages": messages})
 
-    # Print the messages
-    for m in result['messages']:
-        m.pretty_print()
+#     # Print the messages
+#     for m in result['messages']:
+#         m.pretty_print()

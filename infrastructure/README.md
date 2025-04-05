@@ -26,7 +26,7 @@ The infrastructure is built using Terraform and `eksctl`.
 ### Manual ECR for 2 different images
 1. build backend image
 ```bash
-docker build -t genzen-backend:v1.1 .
+docker build --platform=linux/amd64 -t genzen-backend:v1.1 .
 ```
 2. tag image - Make sure to replace image id and the ecr url with your own
 ```bash
@@ -39,6 +39,7 @@ docker push 975049977273.dkr.ecr.us-east-2.amazonaws.com/genzen/backend:v1.1
 4. build frontend image
 ```bash
 docker build \
+--platform=linux/amd64 \
 --build-arg NEXT_PUBLIC_API_URL=http://backend-service:8001 \
 --build-arg NEXT_PUBLIC_APP_ENV=staging \
 -t genzen-frontend:v1.1 . 
@@ -50,6 +51,16 @@ docker tag ed5cd04db2f4 975049977273.dkr.ecr.us-east-2.amazonaws.com/genzen/fron
 6. push image
 ```bash
 docker push 975049977273.dkr.ecr.us-east-2.amazonaws.com/genzen/frontend:v1.1
+```
+
+### Once pushed to ECR. Asusming EKS is running too
+1. use kustomize to apply
+```bash
+kubectl apply -k .k8s/overlays/dev
+```
+2. test frontend service
+```bash
+kubectl port-forward -n genzen svc/frontend-service 3000:3000
 ```
 
 ## S3

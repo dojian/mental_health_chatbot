@@ -1,0 +1,36 @@
+# apiVersion: cert-manager.io/v1
+# kind: Issuer
+# metadata:
+#   name: letsencrypt-prod
+#   namespace: istio-system
+# spec:
+#   acme:
+#   # staging: https://acme-staging-v02.api.letsencrypt.org/directory
+#     server: https://acme-v02.api.letsencrypt.org/directory
+#     email: lphansiri@gmail.com
+#     privateKeySecretRef:
+#       name: letsencrypt-prod
+#     solvers:
+#     - selector: {}
+#       http01:
+#         ingress:
+#           class: istio
+apiVersion: cert-manager.io/v1
+kind: ClusterIssuer
+metadata:
+  name: letsencrypt-prod
+  namespace: istio-system
+spec:
+  acme:
+    server: https://acme-v02.api.letsencrypt.org/directory
+    email: lphansiri@gmail.com
+    privateKeySecretRef:
+      name: letsencrypt-prod
+    solvers:
+    - dns01:
+        route53:
+          region: us-east-2  # Change to your AWS region
+          # hostedZoneID: Z08390761IY9YU5BY51L7  # Your Route53 Hosted Zone ID (optional)
+          # serviceAccountSecretRef:
+          #   name: cert-manager-acme-dns01-route53
+          #   key: rhIvRj6f/Cl2S4aQDK6NAUjliuUCjtSMjKpzTZNg

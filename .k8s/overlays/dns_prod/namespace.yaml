@@ -1,0 +1,9 @@
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: genzen
+  annotations:
+    description: "Genzen Application"
+  labels:
+    istio-injection: enabled

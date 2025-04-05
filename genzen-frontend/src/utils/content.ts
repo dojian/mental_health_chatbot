@@ -1,13 +1,14 @@
 import fs from 'fs';
 import path from 'path';
 import yaml from 'js-yaml';
-import { Mission, Team, Privacy, Acknowledgement } from '@/types/about';
+import { Mission, Team, Privacy, Acknowledgement, Resources } from '@/types/about';
 import { Home } from '@/types/home';
 
 const contentDirectory = path.join(process.cwd(), 'src/content_data/about');
 const privacyDirectory = path.join(process.cwd(), 'src/content_data/privacy');
 const homeDirectory = path.join(process.cwd(), 'src/content_data/home_data');
 const acknowledgementDirectory = path.join(process.cwd(), 'src/content_data/about/acknowledgement');
+const resourcesDirectory = path.join(process.cwd(), 'src/content_data/resources');
 
 export function getMissionContent(): Mission {
   const fullPath = path.join(contentDirectory, 'mission.yaml');
@@ -30,6 +31,12 @@ export function getPrivacyContent(): Privacy {
   return content;
 } 
 
+export function getResourcesContent(): Resources {
+  const fullPath = path.join(resourcesDirectory, 'resources.yaml');
+  const fileContents = fs.readFileSync(fullPath, 'utf8');
+  const content = yaml.load(fileContents) as Resources;
+  return content;
+} 
 export function getHomeContent(): Home {
   const fullPath = path.join(homeDirectory, 'home_data.yaml');
   const fileContents = fs.readFileSync(fullPath, 'utf8');

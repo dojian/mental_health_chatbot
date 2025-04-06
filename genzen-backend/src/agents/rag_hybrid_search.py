@@ -1,7 +1,8 @@
 import boto3
 import pickle
 import cohere
-# import time
+from typing import List, Callable
+from langchain_core.tools import tool
 from langchain_qdrant import QdrantVectorStore
 from langchain_community.retrievers import BM25Retriever
 from langchain.retrievers import EnsembleRetriever
@@ -10,13 +11,16 @@ from qdrant_client import QdrantClient
 from qdrant_client.models import VectorParams, Filter, FieldCondition, MatchAny
 from langchain_community.embeddings import FastEmbedEmbeddings
 
-
 from src.utils.config_setting import Settings
 
 settings = Settings()
 
 class RAGPipeline:
+    """A Retrieval-Augmented Generation (RAG) pipeline that integrates BM25 and Qdrant vector retrieval 
+    with Cohere's reranking model for improved document retrieval and ranking."""
+    
     def __init__(self):
+        """Initializes the RAGPipeline with default values for retrievers, embeddings, and configuration settings."""
         self.chunks = None
         self.base_retriever = None
         self.cohere_client = None
@@ -29,31 +33,24 @@ class RAGPipeline:
         self.bm25_weight = None
         self.qdrant_weight = None
     
-    def initialize_rag_pipeline(self, initial_k = 25, bm25_weight = 0.5, qdrant_weight = 0.5):
-        # Initialize the S3 client
+    def initialize_embeddings(self):
+        """Downloads chunks from S3, loads them, and indexes into Qdrant if necessary."""
         s3 = boto3.client('s3')
 
         # Download the pre-chunked text document file from S3
         s3.download_file(
             Bucket=settings.S3_BUCKET_NAME,
             Key=settings.S3_BUCKET_EMBEDDINGS_KEY,  # Path where the embeddings are saved in S3
-            Filename=f"{settings.S3_BUCKET_TEMP_PATH}/text_chunks.pkl"  # Temporary local path to save the file
+            Filename=f"{settings.S3_BUCKET_CHUNK_TEMP_PATH}/text_chunks.pkl"  # Temporary local path to save the file
         )
         
         # Load the embeddings from the downloaded file
-        with open('/tmp/text_chunks.pkl', 'rb') as f:
+        with open(f"{settings.S3_BUCKET_CHUNK_TEMP_PATH}/text_chunks.pkl", 'rb') as f:
             self.chunks = pickle.load(f)
-        
-        self.initial_k = initial_k
-        self.bm25_weight = bm25_weight
-        self.qdrant_weight = qdrant_weight
-        # Setup BM25 retriever
-        bm25_retriever = BM25Retriever.from_documents(self.chunks)
-        bm25_retriever.k = self.initial_k #top k most relevant documents, as ranked by the BM25 score.
 
         # Setup vector retriever
         self.embeddings_model = FastEmbedEmbeddings(model_name=settings.EMBEDDING_MODEL)
-        self.qdrant_client = QdrantClient(path=f"{settings.S3_BUCKET_TEMP_PATH}/qdrant_data")
+        self.qdrant_client = QdrantClient(path=f"{settings.S3_BUCKET_CHUNK_TEMP_PATH}/qdrant_data")
 
         # Check if the collection already exists
         # Avoid adding repeated documents into vectorstore if collection already exists
@@ -66,7 +63,7 @@ class RAGPipeline:
             print("⚠️ Collection does not exist. Creating new collection.")
             self.qdrant_client.create_collection(
                 collection_name="my_collection",
-                vectors_config=VectorParams(size=768, distance='Cosine')  # Adjusted size to 768 based on your embeddings model
+                vectors_config=VectorParams(size=768, distance='Cosine')
             )
             print("✅ Created new Qdrant collection with updated dimensions")
             add_documents = True
@@ -84,10 +81,24 @@ class RAGPipeline:
             self.vector_store.add_documents(self.chunks)
         
         print("# docs in Qdrant collection: ", self.qdrant_client.get_collection(collection_name="my_collection").points_count)
+    
+    def initialize_retrievers(self, initial_k = 25, bm25_weight = 0.5, qdrant_weight = 0.5):
+        """Initializes the hybrid retriever pipeline after embeddings have been loaded and stored."""
+        assert self.chunks is not None, "Chunks must be loaded before initializing retrievers."
+        
+        self.initial_k = initial_k
+        self.bm25_weight = bm25_weight
+        self.qdrant_weight = qdrant_weight
+        
+        # Setup BM25 retriever
+        bm25_retriever = BM25Retriever.from_documents(self.chunks)
+        bm25_retriever.k = self.initial_k #top k most relevant documents, as ranked by the BM25 score.
+        print(f"BM25 retriever setup with k={self.initial_k}")
 
         # Setup the Qdrant retriever
         qdrant_retriever = self.vector_store.as_retriever(search_kwargs={"k": self.initial_k})
-        
+        print(f"Qdrant retriever setup with k={self.initial_k}")
+
         # Fusion of retrievers BM25+ vector DB
         print("Setting up the retriever ensemble (BM25 + Qdrant)...")
 
@@ -97,46 +108,43 @@ class RAGPipeline:
         )
 
         self.base_retriever = fusion_retriever
-        self.cohere_client = cohere.Client(settings.COHERE_API_KEY)
-
-        print("RAG pipeline initialized with Qdrant + BM25 + RankFusion.")
-
-    def filter_docs_by_category(self, selected_categories): 
-        if selected_categories is None or "Other" in selected_categories:
-            return self.chunks
-        return [doc for doc in self.chunks if any(category in doc.metadata["categories"] for category in selected_categories)]
-
-
-    def retrieve_with_rerank(self, query: str, final_k: int = 10, selected_categories: list = None) -> List[Document]:
-        
-        # If there are no selected categories or user selects Other, use base retriever to search for documents in entire vector database
-        if selected_categories is None or "Other" in selected_categories:
-            initial_results: List[Document] = self.base_retriever.invoke(query)
+        # Check that the base retriever has been correctly set
+        if self.base_retriever:
+            print("✅ base_retriever has been initialized successfully.")
         else:
-        # Otherwise (re)instantiate retrievers on documents that has at least 1 category in list of selected categories
-            if self.categories is None or set(self.categories) != set(selected_categories):
-                self.categories = selected_categories
-                # filter qdrant retrieved docs to categories
-                filter_criteria = Filter(
-                                      must=[  # 'must' is a required field in Qdrant's filtering model
-                                            FieldCondition(
-                                                key="metadata.categories",
-                                                match=MatchAny(any=selected_categories)  # Matches any category in the select list
-                                            )
-                                        ]
-                                    )
-                filtered_qdrant_retriever = self.vector_store.as_retriever(search_kwargs={"filter": filter_criteria, 
-                                                                                          "k": self.initial_k})
-                # create new BM25 retriever on filtered docs in categories
-                filtered_docs = self.filter_docs_by_category(selected_categories)
-                filtered_bm25_retriever = BM25Retriever.from_documents(filtered_docs)
-                filtered_bm25_retriever.k = self.initial_k
-                self.filtered_retriever = EnsembleRetriever(
-                    retrievers=[filtered_bm25_retriever, filtered_qdrant_retriever],
-                    weights=[self.bm25_weight, self.qdrant_weight]
-                )
-            
-            initial_results = self.filtered_retriever.invoke(query)
+            print("❌ base_retriever is not initialized.")
+
+        self.cohere_client = cohere.Client(settings.COHERE_API_KEY)
+        print("Cohere client initialized.")
+
+        print("RAG retriever initialized with Qdrant and BM25 RankFusion.")
+
+    # def filter_docs_by_category(self, selected_categories): 
+    #     """Filters documents based on selected categories.
+        
+    #     Args:
+    #         selected_categories (list): List of categories to filter documents by.
+        
+    #     Returns:
+    #         List[Document]: Filtered list of documents.
+    #     """
+    #     if selected_categories is None or "Other" in selected_categories:
+    #         return self.chunks
+    #     return [doc for doc in self.chunks if any(category in doc.metadata["categories"] for category in selected_categories)]
+
+
+    def retrieve_with_rerank(self, query: str, final_k: int = 10) -> List[Document]: #removed selected_categories (list, optional): Categories to filter results.
+        """Retrieves and reranks documents based on a user query using Cohere's reranking model.
+        
+        Args:
+            query (str): The query string.
+            final_k (int): Number of top documents to return after reranking.
+        
+        Returns:
+            List[Document]: The top reranked documents.
+        """
+        # Always use the base retriever (no filtering by categories)
+        initial_results: List[Document] = self.base_retriever.invoke(query)
 
         if not initial_results:
             print("⚠️ No documents retrieved for query:", query)
@@ -154,8 +162,6 @@ class RAGPipeline:
             top_n=min(final_k, len(documents))  # Prevent index errors
         )
 
-        #time.sleep(0.1)  # Optional: adjust for your API plan
-
         # Step 3: Get top reranked documents
         reranked_docs = [initial_results[r.index] for r in response.results]
         print(f"✅ Reranked and returning {len(reranked_docs)} documents.")
@@ -165,22 +171,21 @@ class RAGPipeline:
             doc.page_content = doc.page_content.replace(doc.metadata["contextualized_content"], "").strip()
         return reranked_docs
 
-#test if the above class/functions work
-if __name__ == "__main__":
-    #Create instance of RAGPipeline class
-    rag_pipeline = RAGPipeline()
+# #test if the above class/functions work
+# if __name__ == "__main__":
+#     #Create instance of RAGPipeline class
+#     rag_pipeline = RAGPipeline()
     
-    # Initialize the RAG pipeline (loads data from S3, etc.)
-    rag_pipeline.initialize_rag_pipeline()
+#     # Initialize the RAG pipeline (loads data from S3, etc.)
+#     rag_pipeline.initialize_rag_pipeline()
 
-    # Test retrieve with rerank
-    query = "How do I find a mentor? I feel so behind and failing"
-    selected_categories = ["career"]
-    top_docs = rag_pipeline.retrieve_with_rerank(query, final_k=10, selected_categories = selected_categories)
+#     # Test retrieve with rerank
+#     query = "my major is finance. How do I find a mentor? I feel so behind and failing"
+#     top_docs = rag_pipeline.retrieve_with_rerank(query, final_k=10)
 
-    # Print the reranked documents
-    print("Top reranked documents:")
-    for doc in top_docs:
-        print(doc.page_content)
-        print("\n")
+#     # Print the reranked documents
+#     print("Top reranked documents:")
+#     for doc in top_docs:
+#         print(doc.page_content)
+#         print("\n")
     

@@ -2,6 +2,9 @@ import boto3
 import json
 import numpy as np
 from typing import Dict
+from src.utils.config_setting import Settings
+
+settings = Settings()
 
 suicide_model_tar = "modernBERT_suicide_base.tar.gz"
 depression_models_tars = ['modernBERT_depression.tar.gz', 'mental-BERT_depression.tar.gz', 'mental-roberta_depression.tar.gz']
@@ -26,11 +29,9 @@ def predict_suicide_depression(user_text: str) -> str:
         - "mild depression": detected mild form of depression 
         - "severe depression": detected severe detection  
     """
-    sm_runtime = boto3.client('sagemaker-runtime')
-    user_text = '''
-    {0}
-    '''.format(user_text)
-
+    session = boto3.Session(profile_name=settings.AWS_PROFILE)
+    sm_runtime = session.client('sagemaker-runtime', region_name=settings.AWS_REGION)
+    #sm_runtime = boto3.client('sagemaker-runtime', profile ="default")
     # Invoke SageMaker endpoint to classify suicide or depression
     response_suicide = sm_runtime.invoke_endpoint(
         TargetModel = suicide_model_tar,

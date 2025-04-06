@@ -12,7 +12,7 @@
 docker build \
 --build-arg NEXT_PUBLIC_API_URL=http://backend-service:8001 \
 --build-arg NEXT_PUBLIC_APP_ENV=staging \
--t genzen-frontend:v1.2 . 
+-t genzen-frontend:v1.3 . 
 
 # backend - WORKING BUILD
 docker build -t genzen-backend:v1.2 .

@@ -15,10 +15,10 @@ secretGenerator:
 images:
   - name: genzen-backend
     newName: 975049977273.dkr.ecr.us-east-2.amazonaws.com/genzen/backend
-    newTag: v1.2
+    newTag: v1.3
   - name: genzen-frontend
     newName: 975049977273.dkr.ecr.us-east-2.amazonaws.com/genzen/frontend
-    newTag: v1.2
+    newTag: v1.3
 
 patches:
 - path: deployment-patch.yaml

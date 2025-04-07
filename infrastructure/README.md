@@ -26,15 +26,15 @@ The infrastructure is built using Terraform and `eksctl`.
 ### Manual ECR for 2 different images
 1. build backend image
 ```bash
-docker build --platform=linux/amd64 -t genzen-backend:v1.1 .
+docker build --platform=linux/amd64 -t genzen-backend:v1.3 .
 ```
 2. tag image - Make sure to replace image id and the ecr url with your own
 ```bash
-docker tag 0c4bde675a6f 975049977273.dkr.ecr.us-east-2.amazonaws.com/genzen/backend:v1.1 
+docker tag 0c4bde675a6f 975049977273.dkr.ecr.us-east-2.amazonaws.com/genzen/backend:v1.3 
 ```
 3. push image
 ```bash
-docker push 975049977273.dkr.ecr.us-east-2.amazonaws.com/genzen/backend:v1.1
+docker push 975049977273.dkr.ecr.us-east-2.amazonaws.com/genzen/backend:v1.3
 ```
 4. build frontend image
 ```bash
@@ -42,15 +42,15 @@ docker build \
 --platform=linux/amd64 \
 --build-arg NEXT_PUBLIC_API_URL=http://backend-service:8001 \
 --build-arg NEXT_PUBLIC_APP_ENV=staging \
--t genzen-frontend:v1.1 . 
+-t genzen-frontend:v1.3 . 
 ```
 5. tag image
 ```bash
-docker tag ed5cd04db2f4 975049977273.dkr.ecr.us-east-2.amazonaws.com/genzen/frontend:v1.1
+docker tag ed5cd04db2f4 975049977273.dkr.ecr.us-east-2.amazonaws.com/genzen/frontend:v1.3
 ```
 6. push image
 ```bash
-docker push 975049977273.dkr.ecr.us-east-2.amazonaws.com/genzen/frontend:v1.1
+docker push 975049977273.dkr.ecr.us-east-2.amazonaws.com/genzen/frontend:v1.3
 ```
 
 ### Once pushed to ECR. Asusming EKS is running too

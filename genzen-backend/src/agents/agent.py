@@ -1,30 +1,66 @@
 import os, uuid
 from datetime import datetime
 from dotenv import load_dotenv
+
 from langchain_core.messages import SystemMessage, HumanMessage
-from langchain_openai import ChatOpenAI, OpenAIEmbeddings
-from langgraph.graph import START, StateGraph, MessagesState
+from langchain_openai import ChatOpenAI
+from langgraph.graph import START, END, StateGraph, MessagesState
 from langgraph.prebuilt import tools_condition, ToolNode
 from src.connections.db import checkpointer, memory_store
 from src.agents.tools import mental_health, remember_information, recall_information
+from src.agents.classification_tools import predict_suicide_depression
+from src.connections.lifespan import rag_pipeline
 from src.agents.pii_masker import anonymize_pii
 from src.utils.config_setting import Settings
-
-settings = Settings()
+    
 load_dotenv()
+settings = Settings()
 
 model_name = os.getenv("OPENAI_MODEL_NAME")
 
+def rag_rerank(query: str):
+    """
+    Retrieves and reranks documents based on a user query using the RAG pipeline's 
+    `retrieve_with_rerank` method.
+
+    Args:
+        query (str): The input query for which relevant documents are to be retrieved and reranked.
+
+    Returns:
+        List[Document]: A list of top reranked documents based on the input query.
+    """
+    # Ensure the base retriever is initialized by calling the initialization function
+    if rag_pipeline.base_retriever is None:
+        # Initialize retrievers manually if necessary
+        print("Base retriever is not initialized, initializing now...")
+        rag_pipeline.initialize_retrievers()  # Manually call this only if base_retriever is None
+
+    # Call retrieve_with_rerank
+    return rag_pipeline.retrieve_with_rerank(query)
+
 # Tool
-tools = [mental_health, remember_information, recall_information]
+
+tools = [mental_health, rag_rerank, remember_information, recall_information]
 
 # Define LLM with bound tools
 llm = ChatOpenAI(model=model_name)
 llm_with_tools = llm.bind_tools(tools)
-
+                               
 # System message
-sys_msg_advice = SystemMessage(content="You are a helpful student assistant tasked with mental health counseling. When counseling, make sure to use the **answer** directly from the mental_health tool output")
-no_advice_context = "Avoid giving advices or suggestions. Make sure the  'counseling_strategy' mental_health tool output is not 'Providing Suggestions'. "
+sys_msg_advice = SystemMessage(content="""You are a helpful student assistant tasked with mental health counseling. 
+                               When counseling, make sure to use the **answer** directly from the mental_health tool output.
+                               If the mental_health tool output includes 'Providing Suggestions' as counseling_strategy, 
+                               retrieve additional information using the rag_rerank tool. 
+                               If rag_rerank tool is called, answer the question(user_text) only based on the context information the rag_rerank tool provided.
+                               Do NOT use bullet points in the answer. Answer should be in 5 sentences and use the key words in the user_text to start the answer.
+                               """)
+                               #use the predict_suicide_depression tool first to determine the depression class.
+                               #If the mental_health tool output includes 'Providing Suggestions' as counseling_strategy, 
+                               #retrieve additional information using the ragpipeline tool.
+                               #Use the predict_suicide_depression tool only when a meaningful conversation
+                               #related to mental health has started, and avoid triggering it for casual greetings
+                               #like 'hello' or similar small talk.
+no_advice_context = "Avoid giving advices or suggestions. Make sure the  'counseling_strategy' mental_health tool output is not 'Providing Suggestions'."
 sys_msg_no_advice = SystemMessage(content=sys_msg_advice.content + no_advice_context)
 
 # Node
@@ -162,27 +198,78 @@ def assistant(state: MessagesState):
         "user_text": anonymize_pii(user_text),
     }
 
+#msg for classification tool
+def severe_depr_msg(state:MessagesState):
+    response = """It sounds like things have been really challenging for you and you’re feeling like you want to escape. 
+                    As a chatbot, I am not equipped nor have the expertise to help talk through your situation. 
+                    Please try seeking a mental health professional to discuss your difficult situation. 
+                    For affordable options, you can search for a clinician on Open Path (https://openpathcollective.org/find-a-clinician). 
+                    Help is available; if you need someone to talk with immediately, you can call or text 988 any time. The service is free and confidential."""
+    return {"messages":[response]}
+
+def mild_depr_msg(state:MessagesState):
+    response = """I am really sorry you are going through this; it must be difficult for you. 
+                    Although it might not seem like it now, the way you’re feeling will change. 
+                    While I am not equipped nor have the expertise to help talk through your situation, you do not need to go through this alone. 
+                    If you are able to, talking with a mental health professional or finding a support group are viable options. 
+                    For affordable options, you can search for a clinician on Open Path (https://openpathcollective.org/find-a-clinician)"""
+    return {"messages":[response]}
+def decide_class(state) -> dict:
+    # Use the last user message to classify
+    user_text = state["messages"][-1].content if state["messages"] else ""
+    predicted_cls = predict_suicide_depression(user_text)
+    print("the classification is",predicted_cls) #debug
+
+    # different response based on class
+    if predicted_cls in ("suicide", "severe depression"):
+        print("Routing to: suicide_severe_depression")  # debug
+        return {"route": "suicide_severe_depression"}  # Wrap return value in a dictionary
+    elif predicted_cls == "mild depression":
+        return {"route": "mild_depression"}
+    else:
+        return {"route": "assistant"}
+
 # Build graph
 builder = StateGraph(MessagesState)
-builder.add_node("assistant", assistant)
+builder.add_node("classifier",decide_class)
+
+builder.add_node("suicide_severe_depression", severe_depr_msg)
+builder.add_node("mild_depression", mild_depr_msg)
+builder.add_node("assistant",assistant)
+
 builder.add_node("tools", ToolNode(tools))
-builder.add_edge(START, "assistant")
+#builder.add_node("rag", ragpipeline)
+#builder.add_node("tools", ToolNode(tools))
+
+#logic
+builder.add_edge(START, "classifier")
+
+builder.add_conditional_edges(
+    "classifier",
+    lambda state: state["route"]
+)
+builder.add_edge("suicide_severe_depression", END)
+builder.add_edge("mild_depression", END)
+#builder.add_edge("assistant", "tools")
+
 builder.add_conditional_edges(
     "assistant",
     # If the latest message (result) from assistant is a tool call -> tools_condition routes to tools
     # If the latest message (result) from assistant is a not a tool call -> tools_condition routes to END
     tools_condition,
 )
+
 builder.add_edge("tools", "assistant")
 
 # Compile graph
 graph = builder.compile() #checkpointer=checkpointer
 
-if __name__ == "__main__": 
-    messages=[HumanMessage(content="I am Lily. I feel sad about my calculus homework. I don't know if i will be about to understand the chain rule.")]
-    # Invoke graph
-    result=graph. invoke({"messages": messages})
+# if __name__ == "__main__": 
+#     messages=[HumanMessage(content="My major is computer science. How do I find a mentor for career advice? Can you give me some suggestions?")]
+#     #I am Lily. I feel sad about my calculus homework. I don't know if i will be about to understand the chain rule.
+#     # Invoke graph
+#     result=graph. invoke({"messages": messages})
 
-    # Print the messages
-    for m in result['messages']:
-        m.pretty_print()
+#     # Print the messages
+#     for m in result['messages']:
+#         m.pretty_print()

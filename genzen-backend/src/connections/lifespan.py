@@ -10,28 +10,33 @@ from src.connections.db import create_db_and_tables, setup_checkpoint_and_memory
 from src.connections.llm_client import get_llm_client
 from src.agents.rag_hybrid_search import RAGPipeline
 
-import boto3
+from src.utils.aws_clients import init_aws_clients, get_s3_client
+# import boto3
 
-s3 = boto3.client('s3')
+# s3 = boto3.client('s3')
 
 rag_pipeline = RAGPipeline()
 
 @asynccontextmanager
 async def lifespan(app: FastAPI) -> AsyncIterator[None]:
-    global rag_pipeline
+    # global rag_pipeline, s3
 
     ### Logging ###
     logging.basicConfig(filename="genzen-backend-log.log", encoding="utf-8", level=logging.DEBUG)
     logging.info("--------------------------------------------------------------------------------")
     logging.info(f"{datetime.now()}: LIFESPAN - Startup Initiated")
     
+    aws_clients = init_aws_clients()
+    s3 = aws_clients['s3']
+    logging.info(f"{datetime.now()}: LIFESPAN - AWS clients initialized")
+
     ### Redis ###
     await init_redis(app)
     logging.info(f"{datetime.now()}: LIFESPAN - Connected to Redis")
 
     ### OpenAI ###
-    model = get_llm_client(temperature=0.6)
-    logging.info(f"{datetime.now()}: LIFESPAN - Connected to OpenAI - {model.model_name}")
+    # model = get_llm_client(temperature=0.6)
+    # logging.info(f"{datetime.now()}: LIFESPAN - Connected to OpenAI - {model.model_name}")
  
     ### Postgres ###
     create_db_and_tables()

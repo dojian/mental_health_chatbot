@@ -20,6 +20,8 @@ spec:
               value: "us-east-2"
             - name: AWS_DEFAULT_REGION
               value: "us-east-2"
+            - name: CLASSIFICATION_ENDPOINT
+              value: "huggingface-multi-model-classification-ep"
           envFrom:
             - secretRef:
                 name: backend-secrets

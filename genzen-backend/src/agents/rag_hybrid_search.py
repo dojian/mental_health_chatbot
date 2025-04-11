@@ -13,8 +13,6 @@ from langchain_community.embeddings import FastEmbedEmbeddings
 
 from src.utils.config_setting import Settings
 
-from botocore.config import Config
-
 settings = Settings()
 
 class RAGPipeline:

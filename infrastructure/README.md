@@ -34,8 +34,8 @@ docker tag 0c4bde675a6f 975049977273.dkr.ecr.us-east-2.amazonaws.com/genzen/back
 ```
 3. Combined step
 ```bash
-docker build --platform=linux/amd64 -t 975049977273.dkr.ecr.us-east-2.amazonaws.com/genzen/backend:v1.5 . && \
-docker push 975049977273.dkr.ecr.us-east-2.amazonaws.com/genzen/backend:v1.5
+docker build --platform=linux/amd64 -t 975049977273.dkr.ecr.us-east-2.amazonaws.com/genzen/backend:v1.5-patch5 . && \
+docker push 975049977273.dkr.ecr.us-east-2.amazonaws.com/genzen/backend:v1.5-patch5
 ```
 
 ```bash
@@ -48,6 +48,8 @@ k port-forward -n istio-system svc/grafana 3000:3000
 k port-forward -n istio-system svc/prometheus 9090:9090
 k port-forward -n istio-system svc/kiali 20001:20001
 k port-forward -n istio-system svc/jaeger-query 16686:16686
+
+k exec --stdin --tty -n genzen <pod-name> -- /bin/bash
 ```
 
 
@@ -75,6 +77,19 @@ docker tag ed5cd04db2f4 975049977273.dkr.ecr.us-east-2.amazonaws.com/genzen/fron
 ```bash
 docker push 975049977273.dkr.ecr.us-east-2.amazonaws.com/genzen/frontend:v1.4
 ```
+
+Combine
+```bash
+
+docker build \
+--platform=linux/amd64 \
+--build-arg NEXT_PUBLIC_API_URL=http://backend-service:8001 \
+--build-arg NEXT_PUBLIC_APP_ENV=staging \
+-t 975049977273.dkr.ecr.us-east-2.amazonaws.com/genzen/frontend:v1.4-patch4 . && \
+docker push 975049977273.dkr.ecr.us-east-2.amazonaws.com/genzen/frontend:v1.4-patch4
+
+```
+
 
 ### Once pushed to ECR. Asusming EKS is running too
 1. use kustomize to apply

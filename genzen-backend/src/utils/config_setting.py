@@ -32,12 +32,12 @@ class Settings(BaseSettings):
 
     # AWS
     # AWS_PROFILE: str = os.getenv("AWS_PROFILE")
-    AWS_REGION: str = os.getenv("AWS_REGION")
+    AWS_REGION: str = os.getenv("AWS_REGION", 'us-east-2')
     MENTAL_HEALTH_ENDPOINT: str = os.getenv("MENTAL_HEALTH_ENDPOINT")
     S3_BUCKET_NAME: str = os.getenv("S3_BUCKET_NAME")
     S3_BUCKET_EMBEDDINGS_KEY: str = os.getenv("S3_BUCKET_EMBEDDINGS_KEY")
     S3_BUCKET_CHUNK_TEMP_PATH: str = os.getenv("S3_BUCKET_CHUNK_TEMP_PATH")
-
+    CLASSIFICATION_ENDPOINT: str = os.getenv("CLASSIFICATION_ENDPOINT", '"huggingface-multi-model-classification-ep"')
     # AWS_ACCESS_KEY_ID: str = os.getenv("AWS_ACCESS_KEY_ID")
     # AWS_SECRET_ACCESS_KEY: str = os.getenv("AWS_SECRET_ACCESS_KEY")
 

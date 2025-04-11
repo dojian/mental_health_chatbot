@@ -200,19 +200,14 @@ def assistant(state: MessagesState):
 
 #msg for classification tool
 def severe_depr_msg(state:MessagesState):
-    response = """It sounds like things have been really challenging for you and you’re feeling like you want to escape. 
-                    As a chatbot, I am not equipped nor have the expertise to help talk through your situation. 
-                    Please try seeking a mental health professional to discuss your difficult situation. 
-                    For affordable options, you can search for a clinician on Open Path (https://openpathcollective.org/find-a-clinician). 
-                    Help is available; if you need someone to talk with immediately, you can call or text 988 any time. The service is free and confidential."""
+    response = """It sounds like things have been really challenging for you and you’re feeling like you want to escape. As a chatbot, I am not equipped nor have the expertise to help talk through your situation. Please try seeking a mental health professional to discuss your difficult situation. 
+For affordable options, you can search for a clinician on Open Path (https://openpathcollective.org/find-a-clinician). 
+Help is available; if you need someone to talk with immediately, you can call or text 988 any time. The service is free and confidential."""
     return {"messages":[response]}
 
 def mild_depr_msg(state:MessagesState):
-    response = """I am really sorry you are going through this; it must be difficult for you. 
-                    Although it might not seem like it now, the way you’re feeling will change. 
-                    While I am not equipped nor have the expertise to help talk through your situation, you do not need to go through this alone. 
-                    If you are able to, talking with a mental health professional or finding a support group are viable options. 
-                    For affordable options, you can search for a clinician on Open Path (https://openpathcollective.org/find-a-clinician)"""
+    response = """I am really sorry you are going through this; it must be difficult for you. Although it might not seem like it now, the way you’re feeling will change. While I am not equipped nor have the expertise to help talk through your situation, you do not need to go through this alone. If you are able to, talking with a mental health professional or finding a support group are viable options. 
+For affordable options, you can search for a clinician on Open Path (https://openpathcollective.org/find-a-clinician)"""
     return {"messages":[response]}
 def decide_class(state) -> dict:
     # Use the last user message to classify

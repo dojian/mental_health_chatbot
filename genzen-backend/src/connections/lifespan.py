@@ -10,10 +10,15 @@ from src.connections.db import create_db_and_tables, setup_checkpoint_and_memory
 from src.connections.llm_client import get_llm_client
 from src.agents.rag_hybrid_search import RAGPipeline
 
+import boto3
+
+s3 = boto3.client('s3')
+
 rag_pipeline = RAGPipeline()
 
 @asynccontextmanager
 async def lifespan(app: FastAPI) -> AsyncIterator[None]:
+    global rag_pipeline
 
     ### Logging ###
     logging.basicConfig(filename="genzen-backend-log.log", encoding="utf-8", level=logging.DEBUG)
@@ -35,8 +40,9 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     
         
     ### RAG Embeddings ###
+    print("🌱 Starting up app: initializing RAG pipeline...")
     logging.info("🌱 Starting up app: initializing RAG pipeline...")
-    rag_pipeline.initialize_embeddings() # Only done once
+    rag_pipeline.initialize_embeddings(s3_client=s3) # Only done once
     rag_pipeline.initialize_retrievers() # Setup retrievers from loaded data
     logging.info(f"{datetime.now()}: LIFESPAN - RAG embeddings loaded")
     

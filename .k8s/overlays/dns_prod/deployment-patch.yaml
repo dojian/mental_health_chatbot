@@ -6,8 +6,20 @@ metadata:
 spec:
   template:
     spec:
+      serviceAccountName: default-genzen
       containers:
         - name: genzen-backend
+          env:
+            - name: AWS_CONFIG_FILE
+              value: "/dev/null"
+            - name: AWS_SHARED_CREDENTIALS_FILE
+              value: "/dev/null"
+            - name: AWS_SDK_LOAD_CONFIG
+              value: "0"
+            - name: AWS_REGION
+              value: "us-east-2"
+            - name: AWS_DEFAULT_REGION
+              value: "us-east-2"
           envFrom:
             - secretRef:
                 name: backend-secrets

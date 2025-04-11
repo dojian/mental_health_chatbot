@@ -22,11 +22,11 @@ spec:
           imagePullPolicy: IfNotPresent
           resources:
             requests:
-              cpu: 200m
-              memory: 500Mi
-            limits:
-              cpu: 1000m
+              cpu: 800m
               memory: 1000Mi
+            limits:
+              cpu: 2500m
+              memory: 5000Mi
           ports:
             - containerPort: 8001
           env: 
@@ -45,12 +45,15 @@ spec:
               path: /health
               port: 8001
             initialDelaySeconds: 15
-            periodSeconds: 30
+            periodSeconds: 60          # Changed from 30 to 60
+            timeoutSeconds: 10         # Added this line - allow 10s for response
           startupProbe:
             httpGet:
               scheme: HTTP
               path: /health
               port: 8001
+            initialDelaySeconds: 30    # Added this line - wait 30s before first probe
+            timeoutSeconds: 10         # Added this line - allow 10s for response
             failureThreshold: 30
             periodSeconds: 10
       initContainers:

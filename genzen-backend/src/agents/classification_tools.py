@@ -29,9 +29,10 @@ def predict_suicide_depression(user_text: str) -> str:
         - "mild depression": detected mild form of depression 
         - "severe depression": detected severe detection  
     """
-    session = boto3.Session(profile_name=settings.AWS_PROFILE)
-    sm_runtime = session.client('sagemaker-runtime', region_name=settings.AWS_REGION)
-    #sm_runtime = boto3.client('sagemaker-runtime', profile ="default")
+    session = boto3.Session()
+    sm_runtime = session.client(
+        'sagemaker-runtime',
+        )    
     # Invoke SageMaker endpoint to classify suicide or depression
     response_suicide = sm_runtime.invoke_endpoint(
         TargetModel = suicide_model_tar,

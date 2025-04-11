@@ -74,8 +74,10 @@ async def setup_checkpoint_and_memory_store():
             conninfo=POSTGRES_CONN_STRING,
             max_size=20,
             kwargs=connection_kwargs,
-            open=True
+            open=False
         )
+
+        await async_pool.open()
         print("Async pool initialized")
         
         # Initialize memory store with async pool

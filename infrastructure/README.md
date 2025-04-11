@@ -34,8 +34,8 @@ docker tag 0c4bde675a6f 975049977273.dkr.ecr.us-east-2.amazonaws.com/genzen/back
 ```
 3. Combined step
 ```bash
-docker build --platform=linux/amd64 -t 975049977273.dkr.ecr.us-east-2.amazonaws.com/genzen/backend:v1.5 . && \
-docker push 975049977273.dkr.ecr.us-east-2.amazonaws.com/genzen/backend:v1.5
+docker build --platform=linux/amd64 -t 975049977273.dkr.ecr.us-east-2.amazonaws.com/genzen/backend:v1.5-patch4 . && \
+docker push 975049977273.dkr.ecr.us-east-2.amazonaws.com/genzen/backend:v1.5-patch4
 ```
 
 ```bash
@@ -48,6 +48,8 @@ k port-forward -n istio-system svc/grafana 3000:3000
 k port-forward -n istio-system svc/prometheus 9090:9090
 k port-forward -n istio-system svc/kiali 20001:20001
 k port-forward -n istio-system svc/jaeger-query 16686:16686
+
+k exec --stdin --tty -n genzen <pod-name> -- /bin/bash
 ```
 
 

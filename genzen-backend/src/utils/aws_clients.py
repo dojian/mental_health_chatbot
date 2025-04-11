@@ -1,5 +1,6 @@
 import boto3
 import os
+from botocore.config import Config
 from src.utils.config_setting import Settings
 
 s3_client = None
@@ -16,7 +17,13 @@ def init_aws_clients():
     session = boto3.Session(region_name=region)
 
     s3_client = session.client('s3')
-    sagemaker_runtime_client = session.client('sagemaker-runtime')
+
+    sagemaker_config = Config(
+        read_timeout=120,
+        retries={"max_attempts": 3, "mode": "adaptive"}
+    )
+
+    sagemaker_runtime_client = session.client('sagemaker-runtime', config=sagemaker_config)
 
     return {
         's3': s3_client,

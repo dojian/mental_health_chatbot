@@ -34,8 +34,8 @@ docker tag 0c4bde675a6f 975049977273.dkr.ecr.us-east-2.amazonaws.com/genzen/back
 ```
 3. Combined step
 ```bash
-docker build --platform=linux/amd64 -t 975049977273.dkr.ecr.us-east-2.amazonaws.com/genzen/backend:v1.5-patch4 . && \
-docker push 975049977273.dkr.ecr.us-east-2.amazonaws.com/genzen/backend:v1.5-patch4
+docker build --platform=linux/amd64 -t 975049977273.dkr.ecr.us-east-2.amazonaws.com/genzen/backend:v1.5-patch5 . && \
+docker push 975049977273.dkr.ecr.us-east-2.amazonaws.com/genzen/backend:v1.5-patch5
 ```
 
 ```bash
@@ -77,6 +77,19 @@ docker tag ed5cd04db2f4 975049977273.dkr.ecr.us-east-2.amazonaws.com/genzen/fron
 ```bash
 docker push 975049977273.dkr.ecr.us-east-2.amazonaws.com/genzen/frontend:v1.4
 ```
+
+Combine
+```bash
+
+docker build \
+--platform=linux/amd64 \
+--build-arg NEXT_PUBLIC_API_URL=http://backend-service:8001 \
+--build-arg NEXT_PUBLIC_APP_ENV=staging \
+-t 975049977273.dkr.ecr.us-east-2.amazonaws.com/genzen/frontend:v1.4-patch4 . && \
+docker push 975049977273.dkr.ecr.us-east-2.amazonaws.com/genzen/frontend:v1.4-patch4
+
+```
+
 
 ### Once pushed to ECR. Asusming EKS is running too
 1. use kustomize to apply

@@ -21,8 +21,10 @@ export default function SessionSelector({ onSessionSelect, currentSessionId }: S
 
             // console.log('Fetching sessions with token:', token ? 'token exists' : 'no token');
             
-            const response = await fetch('/api/v1/chat/recent-sessions?limit=2', {
+            const response = await fetch(`/api/v1/chat/recent-sessions?limit=2`, {
+                method: 'GET',
                 headers: {
+                    'Content-Type': 'application/json',
                     'Authorization': `Bearer ${token}`,
                 },
             });

@@ -5,6 +5,7 @@ namespace: genzen
 resources:
   - ./namespace.yaml
   - ./my-service-account.yaml
+  # - ./backend-destination-rule.yaml
   - ../../base
   - ./virtual-service.yaml
 
@@ -16,10 +17,10 @@ secretGenerator:
 images:
   - name: genzen-backend
     newName: 975049977273.dkr.ecr.us-east-2.amazonaws.com/genzen/backend
-    newTag: v1.5-patch4
+    newTag: v1.5-patch6
   - name: genzen-frontend
     newName: 975049977273.dkr.ecr.us-east-2.amazonaws.com/genzen/frontend
-    newTag: v1.4
+    newTag: v1.4-patch4
 
 patches:
 - path: deployment-patch.yaml

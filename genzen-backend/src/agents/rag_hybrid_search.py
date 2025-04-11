@@ -13,6 +13,8 @@ from langchain_community.embeddings import FastEmbedEmbeddings
 
 from src.utils.config_setting import Settings
 
+from botocore.config import Config
+
 settings = Settings()
 
 class RAGPipeline:
@@ -33,20 +35,24 @@ class RAGPipeline:
         self.bm25_weight = None
         self.qdrant_weight = None
     
-    def initialize_embeddings(self):
+    def initialize_embeddings(self, s3_client):
         """Downloads chunks from S3, loads them, and indexes into Qdrant if necessary."""
-        s3 = boto3.client('s3')
 
         # Download the pre-chunked text document file from S3
-        s3.download_file(
+        print("Downloading embeddings from S3...")
+        s3_client.download_file(
             Bucket=settings.S3_BUCKET_NAME,
             Key=settings.S3_BUCKET_EMBEDDINGS_KEY,  # Path where the embeddings are saved in S3
             Filename=f"{settings.S3_BUCKET_CHUNK_TEMP_PATH}/text_chunks.pkl"  # Temporary local path to save the file
         )
-        
+        print("Downloaded chunk file from S3.")
+
+        print("Opening chunk file from location...")
         # Load the embeddings from the downloaded file
         with open(f"{settings.S3_BUCKET_CHUNK_TEMP_PATH}/text_chunks.pkl", 'rb') as f:
             self.chunks = pickle.load(f)
+
+        print("added chunks to self.chunks")
 
         # Setup vector retriever
         self.embeddings_model = FastEmbedEmbeddings(model_name=settings.EMBEDDING_MODEL)

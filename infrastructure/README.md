@@ -26,15 +26,38 @@ The infrastructure is built using Terraform and `eksctl`.
 ### Manual ECR for 2 different images
 1. build backend image
 ```bash
-docker build --platform=linux/amd64 -t genzen-backend:v1.3 .
+docker build --platform=linux/amd64 -t genzen-backend:v1.4-patch8 .
 ```
 2. tag image - Make sure to replace image id and the ecr url with your own
 ```bash
-docker tag 0c4bde675a6f 975049977273.dkr.ecr.us-east-2.amazonaws.com/genzen/backend:v1.3 
+docker tag 0c4bde675a6f 975049977273.dkr.ecr.us-east-2.amazonaws.com/genzen/backend:v1.4-patch8
 ```
+3. Combined step
+```bash
+docker build --platform=linux/amd64 -t 975049977273.dkr.ecr.us-east-2.amazonaws.com/genzen/backend:v1.5 . && \
+docker push 975049977273.dkr.ecr.us-east-2.amazonaws.com/genzen/backend:v1.5
+```
+
+```bash
+k get -n genzen
+k logs -n genzen --previous
+k top -n genzen pod --containers
+k describe -n genzen node
+
+k port-forward -n istio-system svc/grafana 3000:3000
+k port-forward -n istio-system svc/prometheus 9090:9090
+k port-forward -n istio-system svc/kiali 20001:20001
+k port-forward -n istio-system svc/jaeger-query 16686:16686
+```
+
+
+
+
+
+
 3. push image
 ```bash
-docker push 975049977273.dkr.ecr.us-east-2.amazonaws.com/genzen/backend:v1.3
+docker push 975049977273.dkr.ecr.us-east-2.amazonaws.com/genzen/backend:v1.4-patch9.1
 ```
 4. build frontend image
 ```bash
@@ -42,15 +65,15 @@ docker build \
 --platform=linux/amd64 \
 --build-arg NEXT_PUBLIC_API_URL=http://backend-service:8001 \
 --build-arg NEXT_PUBLIC_APP_ENV=staging \
--t genzen-frontend:v1.3 . 
+-t genzen-frontend:tester . 
 ```
 5. tag image
 ```bash
-docker tag ed5cd04db2f4 975049977273.dkr.ecr.us-east-2.amazonaws.com/genzen/frontend:v1.3
+docker tag ed5cd04db2f4 975049977273.dkr.ecr.us-east-2.amazonaws.com/genzen/frontend:v1.4
 ```
 6. push image
 ```bash
-docker push 975049977273.dkr.ecr.us-east-2.amazonaws.com/genzen/frontend:v1.3
+docker push 975049977273.dkr.ecr.us-east-2.amazonaws.com/genzen/frontend:v1.4
 ```
 
 ### Once pushed to ECR. Asusming EKS is running too
@@ -62,6 +85,19 @@ kubectl apply -k .k8s/overlays/dev
 ```bash
 kubectl port-forward -n genzen svc/frontend-service 3000:3000
 ```
+
+### Troubleshooting
+```bash
+aws eks describe-cluster --name genzen-test-03 --query "cluster.kubernetesNetworkConfig.podIdentityEnabled"
+eksctl update cluster --name genzen-test-03 --enable-pod-identity
+
+aws eks describe-cluster --name genzen-test-03 --query "cluster.identity"
+aws eks list-pod-identity-associations --cluster-name genzen-test-03 --namespace genzen
+
+aws eks create-pod-identity-association --cluster-name genzen-test-03 --role-arn arn:aws:iam::975049977273:role/eks-s3-role --namespace genzen --service-account default
+
+```
+
 
 ## S3
 * S3 buckets are created in the `us-east-2` region.

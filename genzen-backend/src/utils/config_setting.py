@@ -31,12 +31,15 @@ class Settings(BaseSettings):
     POSTGRES_DB: str = os.getenv("POSTGRES_DB")
 
     # AWS
-    AWS_PROFILE: str = os.getenv("AWS_PROFILE")
+    # AWS_PROFILE: str = os.getenv("AWS_PROFILE")
     AWS_REGION: str = os.getenv("AWS_REGION")
     MENTAL_HEALTH_ENDPOINT: str = os.getenv("MENTAL_HEALTH_ENDPOINT")
     S3_BUCKET_NAME: str = os.getenv("S3_BUCKET_NAME")
     S3_BUCKET_EMBEDDINGS_KEY: str = os.getenv("S3_BUCKET_EMBEDDINGS_KEY")
     S3_BUCKET_CHUNK_TEMP_PATH: str = os.getenv("S3_BUCKET_CHUNK_TEMP_PATH")
+
+    # AWS_ACCESS_KEY_ID: str = os.getenv("AWS_ACCESS_KEY_ID")
+    # AWS_SECRET_ACCESS_KEY: str = os.getenv("AWS_SECRET_ACCESS_KEY")
 
     EMBEDDING_MODEL: str = os.getenv("EMBEDDING_MODEL")
     RERANK_MODEL: str = os.getenv("RERANK_MODEL")

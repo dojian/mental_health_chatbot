@@ -17,7 +17,7 @@ secretGenerator:
 images:
   - name: genzen-backend
     newName: 975049977273.dkr.ecr.us-east-2.amazonaws.com/genzen/backend
-    newTag: v1.5-patch6
+    newTag: v1.6
   - name: genzen-frontend
     newName: 975049977273.dkr.ecr.us-east-2.amazonaws.com/genzen/frontend
     newTag: v1.4-patch4

@@ -14,7 +14,9 @@ settings = Settings()
 POSTGRES_CONN_STRING = f"postgresql://{settings.POSTGRES_USER}:{settings.POSTGRES_PASSWORD}@{settings.POSTGRES_HOST}:{settings.POSTGRES_PORT}/{settings.POSTGRES_DB}?sslmode=disable"
 engine = create_engine(
     POSTGRES_CONN_STRING,
-    echo=settings.DEBUG
+    echo=settings.DEBUG,
+    pool_size=10,
+    max_overflow=20,
 )
 
 connection_kwargs = {

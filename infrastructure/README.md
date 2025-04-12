@@ -34,8 +34,8 @@ docker tag 0c4bde675a6f 975049977273.dkr.ecr.us-east-2.amazonaws.com/genzen/back
 ```
 3. Combined step
 ```bash
-docker build --platform=linux/amd64 -t 975049977273.dkr.ecr.us-east-2.amazonaws.com/genzen/backend:v1.5-patch5 . && \
-docker push 975049977273.dkr.ecr.us-east-2.amazonaws.com/genzen/backend:v1.5-patch5
+docker build --platform=linux/amd64 -t 975049977273.dkr.ecr.us-east-2.amazonaws.com/genzen/backend:v1.6 . && \
+docker push 975049977273.dkr.ecr.us-east-2.amazonaws.com/genzen/backend:v1.6
 ```
 
 ```bash

@@ -45,7 +45,9 @@ def predict_suicide_depression(user_text: str) -> str:
         endpoint_name = getattr(settings, "CLASSIFICATION_ENDPOINT", 'huggingface-multi-model-classification-ep')
 
         print(f"Attempting to SageMaker invoke endpoint {endpoint_name}")
-
+        user_text = """
+        {text}
+        """.format(text = user_text)
         # Invoke SageMaker endpoint to classify suicide or depression
         response_suicide = sm_runtime.invoke_endpoint(
             TargetModel = suicide_model_tar,

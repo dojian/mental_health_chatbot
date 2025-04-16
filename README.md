@@ -13,9 +13,12 @@ Text classification - Suicide & Depression detection
 Supervised fine-tuning - Trained on ESConv to respond with empathy and conversational flow   
 RAG - Supplement LLM responses with academic and career resources   
 Agent Infrastructure using LangGraph - Dynamically determines user needs and routes to appropriate tools (e.g., classifier, RAG)   
+
 Agent Infrastructure    
+   
+![Agent_Infrastructure](pictures/Agent_Infrastructure.png)   
 
-
+    
 When a user submits input, the system first runs the text through the piirahna-v1 model to detect and anonymize personally identifiable information (PII). The anonymized text is then passed to the GPT-4.0 assistant, which interprets the message and determines whether to respond directly or invoke an agent tool. 
 
 Suicide & Depression Detection Flow  

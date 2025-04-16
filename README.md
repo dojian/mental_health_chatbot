@@ -6,10 +6,10 @@ Problem & Motivation
 Our Solution  
 GenZen is a 24/7 AI mental health assistant offering personalized, empathetic support. It helps students manage stress, provides academic/career guidance, and flags users needing crisis care. GenZen does not replace therapy but instead bridges the gap in supporting common college stresses and anxieties. Through the app, we push to make mental health support more scalable, proactive, and immediate for students during their most transformative years. 
 
-Data Science Approach 
+Data Science Approach  
 GenZen incorporates the following data science techniques within its main features: 
 
-Text classification - Suicide & Depression detection 
+Text classification - Suicide & Depression detection  
 Supervised fine-tuning - Trained on ESConv to respond with empathy and conversational flow
 RAG - Supplement LLM responses with academic and career resources
 Agent Infrastructure using LangGraph - Dynamically determines user needs and routes to appropriate tools (e.g., classifier, RAG)
@@ -22,35 +22,35 @@ Suicide & Depression Detection Flow
 
 For each turn, the assistant invokes the Suicide & Depression Detection tool: 
 
-Initial Model: modernBERT 
-Predicts whether the user’s message indicates suicidal ideation, depression, or a miscellaneous topic. 
+Initial Model: modernBERT  
+Predicts whether the user’s message indicates suicidal ideation, depression, or a miscellaneous topic.  
 
  
-Secondary Model: Ensemble: Avg Proba 
-Triggered only if depression is detected, triggers an ensemble of mental-BERT, mental-roBERTa, and modernBERT models to further classify severity into minimum, mild, or moderate/severe. 
-Response logic based on prediction: 
+Secondary Model: Ensemble: Avg Proba  
+Triggered only if depression is detected, triggers an ensemble of mental-BERT, mental-roBERTa, and modernBERT models to further classify severity into minimum, mild, or moderate/severe.  
+Response logic based on prediction:  
 
-No sensitive topic or minimum depression → Continue conversation or invoke another tool. 
+No sensitive topic or minimum depression → Continue conversation or invoke another tool.  
 Mild depression → Send an affirming message encouraging the user to seek mental health support, with links to resources. 
 Moderate/severe depression or suicidal ideation → Send an urgent support message with crisis resources, including professional help guidance and the suicide hotline. 
 Mental Health Expert Tool
 If the user displays stress or anxiety, the assistant calls the Mental Health Expert tool, powered by a fine-tuned DeepSeek model: 
 
-Internally infers the user's: 
-Emotion type and intensity 
-Problem type 
-Counseling strategy (e.g., affirmation, questioning, restatement, suggestion) 
-Generates an empathetic response based on the above reasoning. 
-If the user opts not to receive suggestions, the DeepSeek prompt is modified to focus solely on affirmation, questioning, and restatement. 
+Internally infers the user's:  
+Emotion type and intensity  
+Problem type  
+Counseling strategy (e.g., affirmation, questioning, restatement, suggestion)  
+Generates an empathetic response based on the above reasoning.  
+If the user opts not to receive suggestions, the DeepSeek prompt is modified to focus solely on affirmation, questioning, and restatement.  
 
-If the strategy selected includes providing suggestions, the RAG (Retrieval-Augmented Generation) pipeline is triggered: 
+If the strategy selected includes providing suggestions, the RAG (Retrieval-Augmented Generation) pipeline is triggered:  
 
-Relevant academic or mental health resources are retrieved from the vector database 
-The documents are passed as context for the agent’s final response 
-Contextual RAG Retrieval (Inspired by Anthropic)  
+Relevant academic or mental health resources are retrieved from the vector database  
+The documents are passed as context for the agent’s final response  
+Contextual RAG Retrieval (Inspired by Anthropic)   
 
 
-To improve the relevance of retrieved documents in GenZen, we implemented a Contextual RAG method based on Anthropic’s approach. Here's how we employed it: 
+To improve the relevance of retrieved documents in GenZen, we implemented a Contextual RAG method based on Anthropic’s approach. Here's how we employed it:  
  
 1. Adding Context to Chunks 
 

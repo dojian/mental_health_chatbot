@@ -16,13 +16,15 @@ Agent Infrastructure using LangGraph - Dynamically determines user needs and rou
 
 Agent Infrastructure    
    
-![Agent_Infrastructure](pictures/Agent_Infrastructure.png)   
+![Agent_Infrastructure](pictures/Agent_Infrastructure_2.png)   
 
     
 When a user submits input, the system first runs the text through the piirahna-v1 model to detect and anonymize personally identifiable information (PII). The anonymized text is then passed to the GPT-4.0 assistant, which interprets the message and determines whether to respond directly or invoke an agent tool. 
 
 Suicide & Depression Detection Flow  
-
+   
+![Classification](pictures/Classification.png)    
+      
 For each turn, the assistant invokes the Suicide & Depression Detection tool: 
 
 Initial Model: modernBERT  
@@ -49,8 +51,11 @@ If the user opts not to receive suggestions, the DeepSeek prompt is modified to 
 If the strategy selected includes providing suggestions, the RAG (Retrieval-Augmented Generation) pipeline is triggered:  
 
 Relevant academic or mental health resources are retrieved from the vector database  
-The documents are passed as context for the agent’s final response  
+The documents are passed as context for the agent’s final response     
+      
 Contextual RAG Retrieval (Inspired by Anthropic)   
+
+![RAG](pictures/RAG.png)  
 
 
 To improve the relevance of retrieved documents in GenZen, we implemented a Contextual RAG method based on Anthropic’s approach. Here's how we employed it:  
@@ -77,12 +82,14 @@ Finally, Cohere’s Rerank-English-v3.0 selects the most relevant K chunks, whic
 
  
 
-Scalable & Secure AWS Technical Architecture Overview 
+Scalable & Secure AWS Technical Architecture Overview    
 
-GenZen is built with a layered AWS architecture that ensures scalability, security, and speed. 
-
-Traffic Engineering 
-
+![AWS](pictures/AWS.png)    
+   
+GenZen is built with a layered AWS architecture that ensures scalability, security, and speed.    
+   
+Traffic Engineering    
+   
 User requests flow through a multi-layered infrastructure: DNS resolution via Route53, TLS termination at AWS Load Balancer, and traffic management through Istio Gateway into our EKS cluster. This zero-trust architecture implements mTLS between services while the Next.js frontend handles API aggregation through dynamic route handlers that proxy requests to internal services. 
 
 Backend Microservices Architecture 

@@ -1,5 +1,6 @@
 .aws
 .env
+.langgraph_api/
 .terraform
 *.tfstate
 *.tfstate.*

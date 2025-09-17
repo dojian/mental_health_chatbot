@@ -123,3 +123,24 @@ async def test_agent_chat_with_memory(auth_client):
 
     # TODO: Verify memory was stored
     # TODO: Delete memory
+
+
+@pytest.mark.asyncio
+async def test_rate_limiting(auth_client):
+    """
+    Test rate limiting with token bucket: 10 capacity, 5 refill per second.
+    Make 11 requests quickly; the 11th should be rate limited.
+    """
+    client, token = auth_client
+
+    for i in range(11):
+        response = await client.post(
+            "/v1/agent-chat",
+            json={"query": f"Rate limit test {i}"},
+            headers={"Authorization": f"Bearer {token}"}
+        )
+        if i < 10:
+            assert response.status_code == 200
+        else:
+            assert response.status_code == 429
+            assert "Rate limit exceeded" in response.json()["detail"]

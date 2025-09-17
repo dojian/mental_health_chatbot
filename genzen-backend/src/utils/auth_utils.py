@@ -2,6 +2,7 @@ from src.models.models import GenZenUser
 from datetime import timedelta, datetime, UTC
 from sqlalchemy.orm import Session
 import jwt
+import time
 from passlib.context import CryptContext
 from fastapi.security import OAuth2PasswordBearer
 from fastapi import Depends, HTTPException, status
@@ -47,7 +48,28 @@ def create_access_token(data: dict, expires_delta: timedelta | None = None) -> s
     expire = datetime.now(UTC) + (expires_delta if expires_delta else timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES))
     to_encode.update({"exp": int(expire.timestamp())})
     return jwt.encode(to_encode, JWT_SECRET, algorithm=ALGORITHM)
-    
+
+async def token_bucket_limiter(redis, user_id: str, capacity: int = 10, refill_rate: float = 5.0):
+    """
+    Token bucket rate limiter using Redis.
+    """
+    key = f"rate_limit:{user_id}"
+    now = time.time()
+    data = await redis.hgetall(key)
+    if not data:
+        tokens = capacity
+        last_refill = now
+    else:
+        tokens = float(data.get(b'tokens', capacity))
+        last_refill = float(data.get(b'last_refill', now))
+    elapsed = now - last_refill
+    tokens = min(capacity, tokens + elapsed * refill_rate)
+    if tokens < 1:
+        raise HTTPException(status_code=429, detail="Rate limit exceeded")
+    tokens -= 1
+    await redis.hset(key, mapping={'tokens': str(tokens), 'last_refill': str(now)})
+    await redis.expire(key, 3600)  # Expire after 1 hour
+
 async def get_current_user(
     token: str = Depends(oauth2_scheme),
     redis = Depends(get_redis_client),
@@ -82,4 +104,5 @@ async def get_current_user(
     user = get_user(username=username, session=session)
     if user is None:
         raise credentials_exception
+    await token_bucket_limiter(redis, user.username)
     return user

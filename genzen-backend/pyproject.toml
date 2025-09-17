@@ -3,7 +3,8 @@ name = "src"
 version = "0.1.0"
 description = "GenZen Backend - A Chatbot for Mental Health"
 authors = [
-    {name = "Lit Phansiri",email = "lphansiri@gmail.com"}
+    {name = "Lit Phansiri",email = "lphansiri@gmail.com"},
+    {name = "An Dong Jian",email = "an.dong90@berkeley.edu"}
 ]
 readme = "README.md"
 requires-python = ">=3.11,<4.0"

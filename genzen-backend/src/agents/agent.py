@@ -54,12 +54,12 @@ sys_msg_advice = SystemMessage(content="""You are a helpful student assistant ta
                                If rag_rerank tool is called, answer the question(user_text) only based on the context information the rag_rerank tool provided.
                                Do NOT use bullet points in the answer. Answer should be in 5 sentences and use the key words in the user_text to start the answer.
                                """)
-                               #use the predict_suicide_depression tool first to determine the depression class.
-                               #If the mental_health tool output includes 'Providing Suggestions' as counseling_strategy, 
-                               #retrieve additional information using the ragpipeline tool.
-                               #Use the predict_suicide_depression tool only when a meaningful conversation
-                               #related to mental health has started, and avoid triggering it for casual greetings
-                               #like 'hello' or similar small talk.
+                            #    use the predict_suicide_depression tool first to determine the depression class.
+                            #    If the mental_health tool output includes 'Providing Suggestions' as counseling_strategy, 
+                            #    retrieve additional information using the ragpipeline tool.
+                            #    Use the predict_suicide_depression tool only when a meaningful conversation
+                            #    related to mental health has started, and avoid triggering it for casual greetings
+                            #    like 'hello' or similar small talk.
 no_advice_context = "Avoid giving advices or suggestions. Make sure the  'counseling_strategy' mental_health tool output is not 'Providing Suggestions'."
 sys_msg_no_advice = SystemMessage(content=sys_msg_advice.content + no_advice_context)
 
@@ -257,7 +257,7 @@ builder.add_conditional_edges(
 builder.add_edge("tools", "assistant")
 
 # Compile graph
-graph = builder.compile() #checkpointer=checkpointer
+graph = builder.compile() #checkpointer=checkpointer, interrupt_before =["action"]
 
 # if __name__ == "__main__": 
 #     messages=[HumanMessage(content="My major is computer science. How do I find a mentor for career advice? Can you give me some suggestions?")]

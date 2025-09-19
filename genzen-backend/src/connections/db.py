@@ -2,6 +2,7 @@ from psycopg_pool import ConnectionPool, AsyncConnectionPool
 from sqlmodel import SQLModel, Session, create_engine
 from datetime import datetime
 from langgraph.checkpoint.postgres.aio import AsyncPostgresSaver
+# from langgraph.checkpoint.aiosqlite import AsyncSQLiteSaver
 from langgraph.store.postgres import AsyncPostgresStore
 from langchain_openai import OpenAIEmbeddings
 from src.utils.config_setting import Settings

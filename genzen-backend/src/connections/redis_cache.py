@@ -14,14 +14,15 @@ cache_redis = None
 async def init_redis(app) -> None:
     """
     Create a Redis client and initialize FastAPI Cache.
-    This cliennt is stored in app.state for later use.
+    This client is stored in app.state for later use.
     """
     global cache_redis, session_redis
-
+    #A Redis client for caching
     cache_redis = aioredis.from_url(settings.REDIS_URL)
     await cache_redis.ping()
+    #Initialize FastAPI Cache
     FastAPICache.init(RedisBackend(cache_redis), prefix="fastapi-cache")
-
+    #A second Redis client for session management
     session_redis = aioredis.from_url(settings.REDIS_URL)
     await session_redis.ping()
 
